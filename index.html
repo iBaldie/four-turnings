@@ -336,84 +336,235 @@
 
   /* Mobile */
   @media (max-width: 700px) {
-    html, body { height: auto; min-height: 100%; overflow: auto; }
-    body { overflow: auto; }
-    header { padding: 1.1rem 1.15rem 0.4rem; }
-    .brand p { font-size: 0.7rem; }
-    .chain { padding: 0 1.15rem 0.85rem; font-size: 0.55rem; letter-spacing: 0.08em; }
+    html, body { height: 100%; overflow: hidden; }
+    body { overflow: hidden; }
+
+    header {
+      padding: 0.7rem 1rem 0.25rem;
+      flex: 0 0 auto;
+      animation: none;
+      opacity: 1;
+    }
+    .brand h1 { font-size: 0.95rem; letter-spacing: 0.16em; }
+    .brand p { display: none; }
+    .chain {
+      display: none;
+    }
+
     .desktop-stage { display: none !important; }
-    .mobile-stage { display: block; padding: 0 1.15rem 1.75rem; position: relative; }
-    .m-axis {
-      position: absolute; left: 1.7rem; top: 0.4rem; bottom: 0.75rem; width: 1px;
-      background: var(--line-strong); transform-origin: top;
-      transform: scaleY(0); animation: drawAxisY 1s var(--ease) 0.2s forwards;
+
+    .mobile-stage {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      position: relative;
+      padding: 0;
     }
-    @keyframes drawAxisY { to { transform: scaleY(1); } }
-    .m-list { list-style: none; }
-    .m-item {
-      position: relative; padding: 0 0 0.95rem 1.95rem;
-      opacity: 0; transform: translateY(8px);
-      animation: mFadeIn 0.45s var(--ease) forwards;
+
+    .tape-readout {
+      flex: 0 0 auto;
+      margin: 0 0.85rem 0.5rem;
+      padding: 0.7rem 0.85rem;
+      border: 1px solid var(--line-strong);
+      background: rgba(10,10,10,0.92);
+      z-index: 5;
+      max-height: 42vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
-    @keyframes mFadeIn { to { opacity: 1; transform: translateY(0); } }
-    .m-item .m-dot {
-      position: absolute; left: 0.3rem; top: 0.4rem;
-      width: 9px; height: 9px; border-radius: 50%;
-      border: 1.5px solid currentColor; background: var(--bg); z-index: 2;
+    .tape-readout .ro-year {
+      font-size: 1.85rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      line-height: 1.1;
+      margin-bottom: 0.45rem;
+      font-variant-numeric: tabular-nums;
     }
-    .m-item.turning-item .m-dot { border-radius: 2px; background: currentColor; opacity: 0.85; }
-    .m-item.event-item .m-dot {
-      width: 5px; height: 5px; left: 0.5rem; top: 0.55rem;
-      background: var(--ink-faint); border: none; border-radius: 0;
+    .tape-readout .ro-row {
+      margin-top: 0.35rem;
+      font-size: 0.68rem;
+      line-height: 1.4;
+      letter-spacing: 0.02em;
     }
-    .m-item.saec-item .m-dot {
-      width: 11px; height: 11px; border-radius: 0; left: 0.22rem;
-      background: transparent; border: 1px solid var(--ink-muted);
+    .tape-readout .ro-kicker {
+      font-size: 0.5rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 0.1rem;
+    }
+    .tape-readout .ro-main { color: var(--ink); }
+    .tape-readout .ro-sub { color: var(--ink-muted); }
+    .tape-readout .ro-turning.high .ro-main { color: var(--high); }
+    .tape-readout .ro-turning.awakening .ro-main { color: var(--awakening); }
+    .tape-readout .ro-turning.unraveling .ro-main { color: var(--unraveling); }
+    .tape-readout .ro-turning.crisis .ro-main { color: var(--crisis); }
+    .tape-readout .ro-gen.hero { color: var(--hero); }
+    .tape-readout .ro-gen.prophet { color: var(--prophet); }
+    .tape-readout .ro-gen.nomad { color: var(--nomad); }
+    .tape-readout .ro-gen.artist { color: var(--artist); }
+    .tape-readout .ro-living {
+      display: flex; flex-direction: column; gap: 0.2rem;
+      margin-top: 0.15rem;
+    }
+    .tape-readout .ro-living-item {
+      display: flex; justify-content: space-between; gap: 0.5rem;
+      font-size: 0.62rem; line-height: 1.35;
+    }
+    .tape-readout .ro-living-item .name { letter-spacing: 0.04em; }
+    .tape-readout .ro-living-item .meta { color: var(--ink-muted); text-align: right; }
+    .tape-readout .ro-event { color: var(--event); }
+    .tape-readout .ro-empty { color: var(--ink-faint); font-size: 0.62rem; }
+
+    .tape-viewport {
+      flex: 1 1 auto;
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .tape-cursor {
+      position: absolute;
+      left: 0; right: 0;
+      top: 50%;
+      height: 0;
+      z-index: 4;
+      pointer-events: none;
+    }
+    .tape-cursor::before {
+      content: "";
+      position: absolute;
+      left: 0; right: 0;
+      top: -0.5px;
+      height: 1px;
+      background: rgba(255,255,255,0.85);
+      box-shadow: 0 0 12px rgba(255,255,255,0.25);
+    }
+    .tape-cursor .cursor-year {
+      position: absolute;
+      left: 0.75rem;
+      top: -1.35rem;
+      font-size: 1.35rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      font-variant-numeric: tabular-nums;
+      color: var(--ink);
+      text-shadow: 0 0 18px rgba(0,0,0,0.9);
+    }
+    .tape-cursor .cursor-notch {
+      position: absolute;
+      right: 0.65rem;
+      top: -5px;
+      width: 10px; height: 10px;
+      border: 1px solid var(--ink);
       transform: rotate(45deg);
+      background: var(--bg);
     }
-    .m-item.high { color: var(--high); }
-    .m-item.awakening { color: var(--awakening); }
-    .m-item.unraveling { color: var(--unraveling); }
-    .m-item.crisis { color: var(--crisis); }
-    .m-item.hero { color: var(--hero); }
-    .m-item.prophet { color: var(--prophet); }
-    .m-item.nomad { color: var(--nomad); }
-    .m-item.artist { color: var(--artist); }
-    .m-item.event-item { color: var(--ink-muted); }
-    .m-item.saec-item { color: var(--ink); }
-    .m-card {
-      border: 1px solid var(--line); padding: 0.7rem 0.85rem;
-      background: rgba(255,255,255,0.02); cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
+
+    .tape-scroll {
+      height: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: y mandatory;
+      scrollbar-width: none;
     }
-    .m-card.open { border-color: var(--line-strong); background: rgba(255,255,255,0.04); }
-    .m-saec {
-      border: none; padding: 0.35rem 0; background: transparent; cursor: default;
+    .tape-scroll::-webkit-scrollbar { display: none; }
+
+    .tape {
+      position: relative;
+      width: 100%;
+      /* height set in JS: pad + years * pxPerYear + pad */
     }
-    .m-kicker {
-      font-size: 0.5rem; letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--ink-faint); margin-bottom: 0.2rem;
+    .tape-pad {
+      height: 50%; /* set precisely in JS to half viewport */
     }
-    .m-title {
-      font-size: 0.8rem; letter-spacing: 0.07em; text-transform: uppercase;
-      font-weight: 500; color: inherit;
+    .tape-bands {
+      position: absolute;
+      left: 1.1rem;
+      width: 1.35rem;
+      top: 0; bottom: 0;
+      pointer-events: none;
     }
-    .m-sub {
-      margin-top: 0.2rem; font-size: 0.65rem; color: var(--ink-muted); line-height: 1.35;
+    .tape-band {
+      position: absolute;
+      left: 0; right: 0;
+      opacity: 0.35;
     }
-    .m-detail {
-      display: none; margin-top: 0.55rem; padding-top: 0.55rem;
-      border-top: 1px solid var(--line); font-size: 0.7rem;
-      line-height: 1.5; color: var(--ink-muted);
+    .tape-band.high { background: var(--high); }
+    .tape-band.awakening { background: var(--awakening); }
+    .tape-band.unraveling { background: var(--unraveling); }
+    .tape-band.crisis { background: var(--crisis); }
+    .tape-band.projected { opacity: 0.18; }
+
+    .tape-rail {
+      position: absolute;
+      left: 1.7rem;
+      width: 1px;
+      top: 0; bottom: 0;
+      background: var(--line-strong);
+      pointer-events: none;
     }
-    .m-card.open .m-detail { display: block; }
-    .m-item.projected .m-card { border-style: dashed; }
+
+    .tape-ticks {
+      position: relative;
+      margin-left: 1.1rem;
+    }
+    .tape-tick {
+      position: absolute;
+      left: 0;
+      height: 0;
+      width: 100%;
+      scroll-snap-align: center;
+    }
+    .tape-tick .mark {
+      position: absolute;
+      left: 0.6rem;
+      top: 0;
+      height: 1px;
+      width: 8px;
+      background: rgba(255,255,255,0.22);
+      transform: translateY(-0.5px);
+    }
+    .tape-tick.y5 .mark {
+      width: 14px;
+      background: rgba(255,255,255,0.4);
+    }
+    .tape-tick.y10 .mark {
+      width: 22px;
+      background: rgba(255,255,255,0.7);
+    }
+    .tape-tick.y10 .ylab {
+      position: absolute;
+      left: 2.15rem;
+      top: 0;
+      transform: translateY(-50%);
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+      color: var(--ink-muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .tape-tick.has-event .mark {
+      background: #fff;
+      box-shadow: 0 0 6px rgba(255,255,255,0.35);
+    }
+    .tape-tick .evdot {
+      position: absolute;
+      left: 0.35rem;
+      top: -2px;
+      width: 5px; height: 5px;
+      background: var(--ink);
+      border-radius: 50%;
+    }
+
     footer {
-      flex-direction: column; align-items: flex-start;
-      padding: 0.75rem 1.15rem 1.35rem; gap: 0.65rem;
+      display: none;
     }
-    .note { text-align: left; max-width: none; }
     .tooltip { display: none !important; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tape-scroll { scroll-snap-type: y proximity; scroll-behavior: auto; }
+    }
   }
 </style>
 </head>
@@ -450,9 +601,46 @@
   </div>
 </div>
 
-<div class="mobile-stage" id="mobileStage" aria-label="Historical timeline">
-  <div class="m-axis" aria-hidden="true"></div>
-  <ul class="m-list" id="mobileList"></ul>
+<div class="mobile-stage" id="mobileStage" aria-label="Year tape timeline">
+  <div class="tape-readout" id="tapeReadout" aria-live="polite">
+    <div class="ro-year" id="roYear">—</div>
+    <div class="ro-row ro-saec">
+      <div class="ro-kicker">Saeculum</div>
+      <div class="ro-main" id="roSaec">—</div>
+    </div>
+    <div class="ro-row ro-turning" id="roTurningWrap">
+      <div class="ro-kicker">Turning</div>
+      <div class="ro-main" id="roTurning">—</div>
+      <div class="ro-sub" id="roTurningYears"></div>
+    </div>
+    <div class="ro-row">
+      <div class="ro-kicker">Being born</div>
+      <div class="ro-main ro-gen" id="roBorn">—</div>
+    </div>
+    <div class="ro-row">
+      <div class="ro-kicker">Living generations</div>
+      <div class="ro-living" id="roLiving"></div>
+    </div>
+    <div class="ro-row">
+      <div class="ro-kicker">Nearby events</div>
+      <div class="ro-main ro-event" id="roEvents">—</div>
+    </div>
+  </div>
+  <div class="tape-viewport" id="tapeViewport">
+    <div class="tape-cursor" aria-hidden="true">
+      <div class="cursor-year" id="cursorYear">—</div>
+      <div class="cursor-notch"></div>
+    </div>
+    <div class="tape-scroll" id="tapeScroll" tabindex="0">
+      <div class="tape" id="tape">
+        <div class="tape-pad" id="tapePadTop"></div>
+        <div class="tape-bands" id="tapeBands"></div>
+        <div class="tape-rail" aria-hidden="true"></div>
+        <div class="tape-ticks" id="tapeTicks"></div>
+        <div class="tape-pad" id="tapePadBottom"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <footer>
@@ -470,7 +658,7 @@
     Event dates: Wikipedia.
     Also: generationaldynamics.com (diagonal life-stages), timepage.org.
     Where sources differ on era boundaries, S&amp;H published dates are used.
-    Civil War saeculum has no Hero cohort (S&amp;H anomaly). Tap a card on mobile for detail.
+    Civil War saeculum has no Hero cohort (S&amp;H anomaly). On phones, scroll the year tape.
   </p>
 </footer>
 <div class="tooltip" id="tooltip" role="tooltip"></div>
@@ -806,90 +994,277 @@
   // Start at left (1435) for atlas feel.
   scroller.scrollLeft = 0;
 
-  // Mobile list
-  var mobileEvents = [];
-  saecula.forEach(function (s) {
-    mobileEvents.push({
-      kind: "saec", sort: s.start - 0.2,
-      className: "saec-item",
-      kicker: s.projected ? "Projected saeculum" : "Saeculum",
-      title: s.name,
-      sub: s.start + "–" + s.end,
-      detail: (s.projected ? "Projected. " : "") + "Anglo-American saeculum in the Strauss–Howe atlas.",
-      tap: false
-    });
-  });
-  turnings.forEach(function (t) {
-    mobileEvents.push({
-      kind: "turning", sort: t.start,
-      className: "turning-item " + t.type + (t.projected ? " projected" : ""),
-      kicker: "Turning · " + archTitle(t.type),
-      title: t.name,
-      sub: t.start + "–" + t.end + " · " + t.saec,
-      detail: TURNING_COPY[t.type],
-      tap: true
-    });
-  });
-  generations.forEach(function (g) {
-    mobileEvents.push({
-      kind: "gen", sort: g.start + 0.1,
-      className: "arch-item " + g.arch + (g.projected ? " projected" : ""),
-      kicker: "Generation · " + archTitle(g.arch),
-      title: g.name,
-      sub: "Born " + g.start + "–" + g.end,
-      detail: ARCH_COPY[g.arch],
-      tap: true
-    });
-  });
-  events.forEach(function (ev) {
-    mobileEvents.push({
-      kind: "event", sort: ev.year + 0.05,
-      className: "event-item",
-      kicker: "Event",
-      title: ev.label,
-      sub: ev.end ? (ev.year + "–" + ev.end) : String(ev.year),
-      detail: ev.detail,
-      tap: true
-    });
-  });
-  mobileEvents.sort(function (a, b) { return a.sort - b.sort; });
+  // Mobile year-tape
+  var reducedMotion = false;
+  try {
+    reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch (e) {}
 
-  var mobileList = document.getElementById("mobileList");
-  mobileEvents.forEach(function (ev, i) {
-    var li = document.createElement("li");
-    li.className = "m-item " + ev.className;
-    li.style.animationDelay = (0.25 + Math.min(i, 40) * 0.03) + "s";
-    var cardClass = ev.kind === "saec" ? "m-saec" : "m-card";
-    var role = ev.tap ? ' role="button" tabindex="0" aria-expanded="false"' : "";
-    li.innerHTML = '<span class="m-dot" aria-hidden="true"></span>' +
-      '<div class="' + cardClass + '"' + role + ">" +
-      '<div class="m-kicker">' + esc(ev.kicker) + "</div>" +
-      '<div class="m-title">' + esc(ev.title) + "</div>" +
-      '<div class="m-sub">' + esc(ev.sub) + "</div>" +
-      (ev.tap ? '<div class="m-detail">' + esc(ev.detail) + "</div>" : "") +
-      "</div>";
-    mobileList.appendChild(li);
-  });
+  var PX = 16; // px per year
+  var tapeScroll = document.getElementById("tapeScroll");
+  var tape = document.getElementById("tape");
+  var tapeTicks = document.getElementById("tapeTicks");
+  var tapeBands = document.getElementById("tapeBands");
+  var tapePadTop = document.getElementById("tapePadTop");
+  var tapePadBottom = document.getElementById("tapePadBottom");
+  var tapeViewport = document.getElementById("tapeViewport");
+  var roYear = document.getElementById("roYear");
+  var roSaec = document.getElementById("roSaec");
+  var roTurningWrap = document.getElementById("roTurningWrap");
+  var roTurning = document.getElementById("roTurning");
+  var roTurningYears = document.getElementById("roTurningYears");
+  var roBorn = document.getElementById("roBorn");
+  var roLiving = document.getElementById("roLiving");
+  var roEvents = document.getElementById("roEvents");
+  var cursorYear = document.getElementById("cursorYear");
 
-  mobileList.addEventListener("click", function (e) {
-    var card = e.target.closest(".m-card");
-    if (!card) return;
-    var was = card.classList.contains("open");
-    mobileList.querySelectorAll(".m-card.open").forEach(function (c) {
-      c.classList.remove("open"); c.setAttribute("aria-expanded", "false");
+  function isMobileTape() {
+    return window.matchMedia("(max-width: 700px)").matches;
+  }
+
+  function lifeStage(age) {
+    if (age < 0) return null;
+    if (age <= 20) return "Childhood";
+    if (age <= 41) return "Young adult";
+    if (age <= 62) return "Midlife";
+    if (age <= 83) return "Elder";
+    return null;
+  }
+
+  function turningAt(year) {
+    for (var i = 0; i < turnings.length; i++) {
+      var t = turnings[i];
+      if (year >= t.start && year < t.end) return t;
+      // inclusive end for last year of turning if next doesn't claim it
+      if (year === t.end) {
+        var next = turnings[i + 1];
+        if (!next || next.start > year) return t;
+      }
+    }
+    // clamp to nearest
+    if (year < turnings[0].start) return turnings[0];
+    return turnings[turnings.length - 1];
+  }
+
+  function saeculumAt(year) {
+    for (var i = 0; i < saecula.length; i++) {
+      var s = saecula[i];
+      if (year >= s.start && year < s.end) return s;
+      if (year === s.end) {
+        var next = saecula[i + 1];
+        if (!next || next.start > year) return s;
+      }
+    }
+    if (year < saecula[0].start) return saecula[0];
+    return saecula[saecula.length - 1];
+  }
+
+  function buildTape() {
+    if (!tapeScroll) return;
+    var vh = tapeViewport.clientHeight || Math.floor(window.innerHeight * 0.45);
+    var pad = Math.max(Math.floor(vh / 2), 120);
+    tapePadTop.style.height = pad + "px";
+    tapePadBottom.style.height = pad + "px";
+
+    var years = YEAR_END - YEAR_START + 1;
+    tapeTicks.style.height = (years * PX) + "px";
+    tapeBands.style.top = pad + "px";
+    tapeBands.style.height = (years * PX) + "px";
+    document.querySelector(".tape-rail").style.top = pad + "px";
+    document.querySelector(".tape-rail").style.height = (years * PX) + "px";
+
+    // bands
+    tapeBands.innerHTML = "";
+    turnings.forEach(function (tn) {
+      var b = document.createElement("div");
+      b.className = "tape-band " + tn.type + (tn.projected ? " projected" : "");
+      b.style.top = ((tn.start - YEAR_START) * PX) + "px";
+      b.style.height = Math.max((tn.end - tn.start) * PX, 1) + "px";
+      tapeBands.appendChild(b);
     });
-    if (!was) { card.classList.add("open"); card.setAttribute("aria-expanded", "true"); }
-  });
-  mobileList.addEventListener("keydown", function (e) {
-    if (e.key !== "Enter" && e.key !== " ") return;
-    var card = e.target.closest(".m-card");
-    if (!card) return;
-    e.preventDefault();
-    card.click();
-  });
+
+    // ticks — build in chunks via DocumentFragment
+    tapeTicks.innerHTML = "";
+    var eventYears = {};
+    events.forEach(function (ev) {
+      eventYears[ev.year] = true;
+      if (ev.end) {
+        for (var y = ev.year; y <= Math.min(ev.end, ev.year + 2); y++) eventYears[y] = true;
+      }
+    });
+
+    var frag = document.createDocumentFragment();
+    for (var y = YEAR_START; y <= YEAR_END; y++) {
+      var tick = document.createElement("div");
+      var cls = "tape-tick";
+      if (y % 10 === 0) cls += " y10";
+      else if (y % 5 === 0) cls += " y5";
+      if (eventYears[y]) cls += " has-event";
+      tick.className = cls;
+      tick.dataset.year = String(y);
+      tick.style.top = ((y - YEAR_START) * PX) + "px";
+      var html = '<div class="mark"></div>';
+      if (y % 10 === 0) html += '<div class="ylab">' + y + "</div>";
+      if (eventYears[y] && y % 5 !== 0) html += '<div class="evdot"></div>';
+      tick.innerHTML = html;
+      frag.appendChild(tick);
+    }
+    tapeTicks.appendChild(frag);
+  }
+
+  var lastYear = null;
+  var lastDecade = null;
+  var rafPending = false;
+  var snapTimer = null;
+
+  function yearFromScroll() {
+    var pad = tapePadTop.offsetHeight || 0;
+    var center = tapeScroll.scrollTop + tapeScroll.clientHeight / 2;
+    var y = Math.round((center - pad) / PX) + YEAR_START;
+    if (y < YEAR_START) y = YEAR_START;
+    if (y > YEAR_END) y = YEAR_END;
+    return y;
+  }
+
+  function scrollToYear(year, smooth) {
+    var pad = tapePadTop.offsetHeight || 0;
+    var top = pad + (year - YEAR_START) * PX - tapeScroll.clientHeight / 2;
+    if (smooth && !reducedMotion && "scrollTo" in tapeScroll) {
+      tapeScroll.scrollTo({ top: top, behavior: "smooth" });
+    } else {
+      tapeScroll.scrollTop = top;
+    }
+  }
+
+  function updateReadout(year) {
+    roYear.textContent = String(year);
+    cursorYear.textContent = String(year);
+
+    var s = saeculumAt(year);
+    roSaec.textContent = s.name + (s.projected ? " (projected)" : "") + " · " + s.start + "–" + s.end;
+
+    var tn = turningAt(year);
+    roTurningWrap.className = "ro-row ro-turning " + tn.type;
+    roTurning.textContent = tn.name + " · " + archTitle(tn.type);
+    roTurningYears.textContent = tn.start + "–" + tn.end + (tn.projected ? " · projected" : "");
+
+    // being born
+    var born = [];
+    generations.forEach(function (g) {
+      if (year >= g.start && year <= g.end) born.push(g);
+    });
+    if (born.length) {
+      roBorn.className = "ro-main ro-gen " + born[0].arch;
+      roBorn.textContent = born.map(function (g) {
+        return g.short + " (" + archTitle(g.arch) + ") · " + g.start + "–" + g.end;
+      }).join(" · ");
+    } else {
+      roBorn.className = "ro-main";
+      roBorn.textContent = "—";
+    }
+
+    // living gens
+    roLiving.innerHTML = "";
+    var living = [];
+    generations.forEach(function (g) {
+      var mid = (g.start + g.end) / 2;
+      var age = Math.round(year - mid);
+      var stage = lifeStage(age);
+      if (!stage) return;
+      living.push({ g: g, age: age, stage: stage });
+    });
+    living.sort(function (a, b) { return b.age - a.age; });
+    if (!living.length) {
+      roLiving.innerHTML = '<div class="ro-empty">None in range</div>';
+    } else {
+      living.forEach(function (item) {
+        var row = document.createElement("div");
+        row.className = "ro-living-item ro-gen " + item.g.arch;
+        row.innerHTML = '<span class="name">' + esc(item.g.short) + " · " + esc(archTitle(item.g.arch)) +
+          '</span><span class="meta">' + esc(item.stage) + " · ~" + item.age + "</span>";
+        roLiving.appendChild(row);
+      });
+    }
+
+    // nearby events ±2 years
+    var near = events.filter(function (ev) {
+      var end = ev.end || ev.year;
+      return (ev.year <= year + 2 && end >= year - 2);
+    });
+    if (near.length) {
+      roEvents.textContent = near.map(function (ev) {
+        var span = ev.end ? (ev.year + "–" + ev.end) : String(ev.year);
+        return ev.label + " (" + span + ")";
+      }).join(" · ");
+    } else {
+      roEvents.textContent = "—";
+    }
+  }
+
+  function onTapeScroll() {
+    if (rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(function () {
+      rafPending = false;
+      if (!isMobileTape()) return;
+      var year = yearFromScroll();
+      if (year !== lastYear) {
+        var decade = Math.floor(year / 10);
+        if (lastYear !== null && decade !== lastDecade && year % 10 === 0) {
+          if (!reducedMotion && typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+            try { navigator.vibrate(5); } catch (e) {}
+          }
+        }
+        if (year % 10 === 0) lastDecade = decade;
+        lastYear = year;
+        updateReadout(year);
+      }
+      if (!reducedMotion) {
+        clearTimeout(snapTimer);
+        snapTimer = setTimeout(function () {
+          var y = yearFromScroll();
+          var pad = tapePadTop.offsetHeight || 0;
+          var target = pad + (y - YEAR_START) * PX - tapeScroll.clientHeight / 2;
+          if (Math.abs(tapeScroll.scrollTop - target) > 1) {
+            tapeScroll.scrollTo({ top: target, behavior: "smooth" });
+          }
+        }, 80);
+      }
+    });
+  }
+
+  function initTape() {
+    if (!isMobileTape()) return;
+    buildTape();
+    updateReadout(2026);
+    // wait for layout
+    requestAnimationFrame(function () {
+      scrollToYear(2026, false);
+      lastYear = 2026;
+      updateReadout(2026);
+    });
+  }
+
+  if (tapeScroll) {
+    tapeScroll.addEventListener("scroll", onTapeScroll, { passive: true });
+    window.addEventListener("resize", function () {
+      if (!isMobileTape()) return;
+      var y = lastYear || 2026;
+      buildTape();
+      scrollToYear(y, false);
+      updateReadout(y);
+    });
+    // Only build when mobile (or always build — cheap enough; hide via CSS)
+    if (isMobileTape()) initTape();
+    else {
+      // Prebuild lightly when switching later
+      window.addEventListener("orientationchange", function () { setTimeout(initTape, 200); });
+    }
+  }
+
 
   // Expose for overlap test harness
-  window.__FT = { YEAR_START: YEAR_START, YEAR_END: YEAR_END, events: events, generations: generations };
+  window.__FT = { YEAR_START: YEAR_START, YEAR_END: YEAR_END, events: events, generations: generations, scrollToYear: scrollToYear, yearFromScroll: yearFromScroll, updateReadout: updateReadout };
 })();
 </script>
 </body>
