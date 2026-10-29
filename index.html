@@ -7,13 +7,11 @@
 <style>
   :root {
     --bg: #050505;
-    --bg-elevated: #0a0a0a;
     --ink: #ffffff;
     --ink-muted: rgba(255,255,255,0.55);
     --ink-faint: rgba(255,255,255,0.28);
     --line: rgba(255,255,255,0.12);
     --line-strong: rgba(255,255,255,0.28);
-    --accent: #e8e8e8;
     --high: #6b8cae;
     --awakening: #c4a35a;
     --unraveling: #a67c7c;
@@ -22,7 +20,6 @@
     --prophet: #d4b87e;
     --nomad: #b89e7e;
     --artist: #9eb89e;
-    --family: #ffffff;
     --font: "Helvetica Neue", Helvetica, Arial, sans-serif;
     --ease: cubic-bezier(0.22, 1, 0.36, 1);
   }
@@ -31,7 +28,6 @@
 
   html, body {
     height: 100%;
-    overflow: hidden;
     background: var(--bg);
     color: var(--ink);
     font-family: var(--font);
@@ -41,25 +37,16 @@
   body {
     display: flex;
     flex-direction: column;
+    overflow: hidden;
   }
 
   /* ── Header ─────────────────────────────────────────── */
   header {
     flex: 0 0 auto;
     padding: 1.5rem 2.5rem 0.75rem;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 2rem;
     opacity: 0;
     animation: fadeIn 0.8s var(--ease) 0.1s forwards;
     z-index: 20;
-  }
-
-  .brand {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
   }
 
   .brand h1 {
@@ -70,69 +57,37 @@
   }
 
   .brand p {
+    margin-top: 0.35rem;
     font-size: 0.78rem;
     color: var(--ink-muted);
     letter-spacing: 0.04em;
-    max-width: 36rem;
+    max-width: 40rem;
     line-height: 1.5;
   }
 
-  /* ── Layer toggles ──────────────────────────────────── */
-  .toggles {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    justify-content: flex-end;
-    max-width: 28rem;
-  }
-
-  .toggle {
-    appearance: none;
-    border: 1px solid var(--line-strong);
-    background: transparent;
-    color: var(--ink-muted);
-    font-family: inherit;
-    font-size: 0.65rem;
-    letter-spacing: 0.12em;
+  .chain {
+    flex: 0 0 auto;
+    padding: 0 2.5rem 0.5rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    padding: 0.45rem 0.75rem;
-    cursor: pointer;
-    transition: color 0.25s, border-color 0.25s, background 0.25s;
-    border-radius: 0;
+    color: var(--ink-faint);
+    opacity: 0;
+    animation: fadeIn 0.8s var(--ease) 0.4s forwards;
+    line-height: 1.6;
   }
+  .chain strong { color: var(--ink-muted); font-weight: 500; }
 
-  .toggle:hover { color: var(--ink); border-color: var(--ink-faint); }
-  .toggle.active {
-    color: var(--ink);
-    border-color: var(--ink);
-    background: rgba(255,255,255,0.04);
-  }
-  .toggle .dot {
-    display: inline-block;
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    margin-right: 0.45rem;
-    vertical-align: middle;
-    background: currentColor;
-    opacity: 0.5;
-  }
-  .toggle.active .dot { opacity: 1; }
-  .toggle[data-layer="high"] .dot { background: var(--high); }
-  .toggle[data-layer="awakening"] .dot { background: var(--awakening); }
-  .toggle[data-layer="unraveling"] .dot { background: var(--unraveling); }
-  .toggle[data-layer="crisis"] .dot { background: var(--crisis); }
-  .toggle[data-layer="archetypes"] .dot { background: var(--ink); }
-  .toggle[data-layer="family"] .dot { background: var(--family); }
-  .toggle[data-layer="projection"] .dot { background: var(--ink-faint); }
-
-  /* ── Stage ──────────────────────────────────────────── */
-  .stage-wrap {
+  /* ── Desktop stage (horizontal) ─────────────────────── */
+  .desktop-stage {
     flex: 1 1 auto;
     position: relative;
     min-height: 0;
     display: flex;
     flex-direction: column;
   }
+
+  .mobile-stage { display: none; }
 
   .edge-fade {
     position: absolute;
@@ -168,10 +123,7 @@
     transition: opacity 0.4s;
   }
   .scroll-hint.hidden { opacity: 0 !important; }
-  .scroll-hint .arrows {
-    display: inline-flex;
-    gap: 0.15rem;
-  }
+  .scroll-hint .arrows { display: inline-flex; gap: 0.15rem; }
   .scroll-hint .arrows span {
     display: inline-block;
     animation: nudge 1.6s ease-in-out infinite;
@@ -195,7 +147,6 @@
     padding: 0 2.5rem;
   }
   .timeline-scroll::-webkit-scrollbar { height: 4px; }
-  .timeline-scroll::-webkit-scrollbar-track { background: transparent; }
   .timeline-scroll::-webkit-scrollbar-thumb {
     background: rgba(255,255,255,0.15);
     border-radius: 2px;
@@ -205,12 +156,10 @@
     position: relative;
     height: 100%;
     min-height: 420px;
-    /* ~210 years from 1900 to 2110 → wide canvas */
     width: max(2200px, 240vw);
     padding: 3rem 0 6rem;
   }
 
-  /* ── Axis ───────────────────────────────────────────── */
   .axis {
     position: absolute;
     left: 0; right: 0;
@@ -221,9 +170,7 @@
     transform: scaleX(0);
     animation: drawAxis 1.4s var(--ease) 0.4s forwards;
   }
-
-  .axis::before,
-  .axis::after {
+  .axis::before, .axis::after {
     content: "";
     position: absolute;
     top: 50%;
@@ -237,11 +184,8 @@
   .axis::before { left: 0; }
   .axis::after { right: 0; }
 
-  @keyframes drawAxis {
-    to { transform: scaleX(1); }
-  }
+  @keyframes drawAxis { to { transform: scaleX(1); } }
 
-  /* year ticks */
   .ticks {
     position: absolute;
     left: 0; right: 0;
@@ -249,7 +193,6 @@
     height: 0;
     pointer-events: none;
   }
-
   .tick {
     position: absolute;
     top: 0;
@@ -257,10 +200,8 @@
     opacity: 0;
   }
   .tick.visible { animation: fadeUp 0.5s var(--ease) forwards; }
-
   .tick .stem {
-    width: 1px;
-    height: 10px;
+    width: 1px; height: 10px;
     background: var(--line-strong);
     margin: 0 auto;
   }
@@ -273,7 +214,6 @@
     white-space: nowrap;
   }
 
-  /* ── Turning blocks ─────────────────────────────────── */
   .turnings {
     position: absolute;
     left: 0; right: 0;
@@ -284,20 +224,11 @@
   .turning {
     position: absolute;
     top: 0; bottom: 0;
-    border-top: 1px solid transparent;
     opacity: 0;
     transform: translateY(12px);
-    transition: opacity 0.35s, filter 0.35s;
     cursor: default;
   }
-  .turning.enter {
-    animation: fadeSlideUp 0.7s var(--ease) forwards;
-  }
-  .turning.hidden-layer {
-    opacity: 0 !important;
-    pointer-events: none;
-    filter: blur(2px);
-  }
+  .turning.enter { animation: fadeSlideUp 0.7s var(--ease) forwards; }
 
   .turning .band {
     position: absolute;
@@ -353,7 +284,6 @@
     margin-top: 0.15rem;
   }
 
-  /* flowing connector between turnings */
   .connector {
     position: absolute;
     top: 52%;
@@ -381,7 +311,6 @@
     100% { left: calc(100% - 28px); opacity: 0; }
   }
 
-  /* ── Archetype lane ─────────────────────────────────── */
   .archetypes {
     position: absolute;
     left: 0; right: 0;
@@ -395,15 +324,9 @@
     transform: translateX(-50%);
     text-align: center;
     opacity: 0;
-    transition: opacity 0.35s;
+    cursor: default;
   }
-  .arch.enter {
-    animation: fadeSlideUp 0.65s var(--ease) forwards;
-  }
-  .arch.hidden-layer {
-    opacity: 0 !important;
-    pointer-events: none;
-  }
+  .arch.enter { animation: fadeSlideUpCentered 0.65s var(--ease) forwards; }
 
   .arch .pip {
     width: 8px; height: 8px;
@@ -430,7 +353,6 @@
     margin-top: 0.15rem;
   }
 
-  /* ── Family markers ─────────────────────────────────── */
   .family {
     position: absolute;
     left: 0; right: 0;
@@ -445,16 +367,8 @@
     text-align: center;
     opacity: 0;
     cursor: default;
-    transition: opacity 0.35s;
   }
-  .person.enter {
-    animation: fadeSlideUp 0.7s var(--ease) forwards;
-  }
-  .person.hidden-layer {
-    opacity: 0 !important;
-    pointer-events: none;
-  }
-
+  .person.enter { animation: fadeSlideUpCentered 0.7s var(--ease) forwards; }
   .person .marker {
     width: 10px; height: 10px;
     margin: 0 auto 0.55rem;
@@ -488,7 +402,7 @@
   .tooltip {
     position: fixed;
     z-index: 100;
-    max-width: 280px;
+    max-width: min(280px, calc(100vw - 2rem));
     padding: 0.85rem 1rem;
     background: #111;
     border: 1px solid var(--line-strong);
@@ -505,16 +419,16 @@
     opacity: 1;
     transform: translateY(0);
   }
+  .tooltip.pinned { pointer-events: auto; }
   .tooltip .tt-title {
     font-size: 0.68rem;
     letter-spacing: 0.16em;
     text-transform: uppercase;
     margin-bottom: 0.4rem;
-    color: var(--ink);
   }
   .tooltip .tt-body { color: var(--ink-muted); }
 
-  /* ── Legend / footer ────────────────────────────────── */
+  /* ── Footer ─────────────────────────────────────────── */
   footer {
     flex: 0 0 auto;
     padding: 0.75rem 2.5rem 1.25rem;
@@ -542,10 +456,7 @@
     align-items: center;
     gap: 0.4rem;
   }
-  .legend i {
-    display: inline-block;
-    width: 10px; height: 2px;
-  }
+  .legend i { display: inline-block; width: 10px; height: 2px; }
   .legend .l-high i { background: var(--high); }
   .legend .l-awakening i { background: var(--awakening); }
   .legend .l-unraveling i { background: var(--unraveling); }
@@ -561,6 +472,10 @@
     background: var(--ink);
     clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
   }
+  .legend .l-proj i {
+    width: 12px; height: 0;
+    border-top: 1px dashed var(--ink-faint);
+  }
 
   .note {
     font-size: 0.62rem;
@@ -571,27 +486,7 @@
     text-align: right;
   }
 
-  /* ── Chain strip ────────────────────────────────────── */
-  .chain {
-    flex: 0 0 auto;
-    padding: 0 2.5rem 0.5rem;
-    font-size: 0.62rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    opacity: 0;
-    animation: fadeIn 0.8s var(--ease) 2s forwards;
-  }
-  .chain strong {
-    color: var(--ink-muted);
-    font-weight: 500;
-  }
-
-  /* ── Animations ─────────────────────────────────────── */
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   @keyframes fadeUp {
     from { opacity: 0; transform: translateX(-50%) translateY(6px); }
     to { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -600,39 +495,165 @@
     from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  .arch.enter, .person.enter {
-    /* keep horizontal centering */
-  }
-  .arch.enter {
-    animation-name: fadeSlideUpCentered;
-  }
-  .person.enter {
-    animation-name: fadeSlideUpCentered;
-  }
   @keyframes fadeSlideUpCentered {
     from { opacity: 0; transform: translateX(-50%) translateY(12px); }
     to { opacity: 1; transform: translateX(-50%) translateY(0); }
   }
 
-  /* ── Responsive ─────────────────────────────────────── */
-  @media (max-width: 800px) {
-    header {
-      flex-direction: column;
-      padding: 1.1rem 1.25rem 0.5rem;
-      gap: 1rem;
+  /* ── Mobile vertical timeline ───────────────────────── */
+  @media (max-width: 700px) {
+    html, body { height: auto; min-height: 100%; overflow: auto; }
+    body { overflow: auto; }
+
+    header { padding: 1.25rem 1.25rem 0.5rem; }
+    .brand p { font-size: 0.72rem; }
+    .chain {
+      padding: 0 1.25rem 1rem;
+      font-size: 0.58rem;
+      letter-spacing: 0.1em;
     }
-    .toggles { justify-content: flex-start; max-width: none; }
-    .timeline-scroll { padding: 0 1.25rem; }
-    .timeline { width: max(1800px, 320vw); min-height: 380px; }
+
+    .desktop-stage { display: none !important; }
+    .mobile-stage {
+      display: block;
+      flex: 1 1 auto;
+      padding: 0 1.25rem 2rem;
+      position: relative;
+    }
+
+    .m-axis {
+      position: absolute;
+      left: 1.85rem;
+      top: 0.5rem;
+      bottom: 1rem;
+      width: 1px;
+      background: var(--line-strong);
+      transform-origin: top center;
+      transform: scaleY(0);
+      animation: drawAxisY 1.2s var(--ease) 0.3s forwards;
+    }
+    @keyframes drawAxisY { to { transform: scaleY(1); } }
+
+    .m-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding-left: 0.15rem;
+    }
+
+    .m-item {
+      position: relative;
+      padding: 0 0 1.35rem 2.1rem;
+      opacity: 0;
+      transform: translateY(10px);
+      animation: mFadeIn 0.55s var(--ease) forwards;
+    }
+    .m-item:last-child { padding-bottom: 0.5rem; }
+
+    @keyframes mFadeIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .m-item .m-dot {
+      position: absolute;
+      left: 0.35rem;
+      top: 0.35rem;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      border: 1.5px solid currentColor;
+      background: var(--bg);
+      z-index: 2;
+    }
+    .m-item.turning-item .m-dot {
+      border-radius: 2px;
+      width: 10px; height: 10px;
+      background: currentColor;
+      opacity: 0.85;
+    }
+    .m-item.person-item .m-dot {
+      border-radius: 0;
+      background: var(--ink);
+      border: none;
+      width: 9px; height: 9px;
+      clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+      left: 0.4rem;
+      top: 0.4rem;
+    }
+    .m-item.arch-item .m-dot { background: transparent; }
+
+    .m-item.high { color: var(--high); }
+    .m-item.awakening { color: var(--awakening); }
+    .m-item.unraveling { color: var(--unraveling); }
+    .m-item.crisis { color: var(--crisis); }
+    .m-item.hero { color: var(--hero); }
+    .m-item.prophet { color: var(--prophet); }
+    .m-item.nomad { color: var(--nomad); }
+    .m-item.artist { color: var(--artist); }
+    .m-item.person-item { color: var(--ink); }
+
+    .m-card {
+      border: 1px solid var(--line);
+      padding: 0.85rem 1rem;
+      background: rgba(255,255,255,0.02);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .m-card:active, .m-card.open {
+      border-color: var(--line-strong);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .m-card .m-kicker {
+      font-size: 0.55rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 0.25rem;
+    }
+    .m-card .m-title {
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 500;
+      color: inherit;
+    }
+    .m-card .m-sub {
+      margin-top: 0.25rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.04em;
+      color: var(--ink-muted);
+      line-height: 1.4;
+    }
+    .m-card .m-detail {
+      display: none;
+      margin-top: 0.65rem;
+      padding-top: 0.65rem;
+      border-top: 1px solid var(--line);
+      font-size: 0.72rem;
+      line-height: 1.55;
+      color: var(--ink-muted);
+      letter-spacing: 0.02em;
+    }
+    .m-card.open .m-detail { display: block; }
+
+    .m-item.projected .m-card {
+      border-style: dashed;
+      opacity: 0.85;
+    }
+
     footer {
       flex-direction: column;
       align-items: flex-start;
-      padding: 0.75rem 1.25rem 1rem;
+      padding: 0.85rem 1.25rem 1.5rem;
+      gap: 0.75rem;
+      animation-delay: 0.6s;
     }
-    .note { text-align: left; }
-    .chain { padding: 0 1.25rem 0.4rem; }
-    .scroll-hint { right: 1.25rem; bottom: 4.5rem; }
-    .edge-fade { width: 2.5rem; }
+    .note { text-align: left; max-width: none; }
+    .legend { gap: 0.85rem 1rem; }
+
+    .tooltip { display: none !important; }
   }
 </style>
 </head>
@@ -643,22 +664,14 @@
     <h1>Four Turnings</h1>
     <p>Strauss &amp; Howe’s saeculum — roughly 80–100 years, four seasons of history — overlaid with Liam’s family line.</p>
   </div>
-  <div class="toggles" id="toggles" role="group" aria-label="Toggle layers">
-    <button class="toggle active" data-layer="high" type="button"><span class="dot"></span>High</button>
-    <button class="toggle active" data-layer="awakening" type="button"><span class="dot"></span>Awakening</button>
-    <button class="toggle active" data-layer="unraveling" type="button"><span class="dot"></span>Unraveling</button>
-    <button class="toggle active" data-layer="crisis" type="button"><span class="dot"></span>Crisis</button>
-    <button class="toggle active" data-layer="archetypes" type="button"><span class="dot"></span>Archetypes</button>
-    <button class="toggle active" data-layer="family" type="button"><span class="dot"></span>Family</button>
-    <button class="toggle active" data-layer="projection" type="button"><span class="dot"></span>Next Saeculum</button>
-  </div>
 </header>
 
 <div class="chain">
   Parent–child chain: <strong>Heroes</strong> raise Prophets · <strong>Prophets</strong> raise Nomads · <strong>Nomads</strong> raise Artists · <strong>Artists</strong> raise the next Heroes
 </div>
 
-<div class="stage-wrap">
+<!-- Desktop horizontal timeline -->
+<div class="desktop-stage" id="desktopStage">
   <div class="edge-fade left" aria-hidden="true"></div>
   <div class="edge-fade right" aria-hidden="true"></div>
   <div class="scroll-hint" id="scrollHint"><span class="arrows"><span>›</span><span>›</span></span> Scroll to explore</div>
@@ -675,6 +688,12 @@
   </div>
 </div>
 
+<!-- Mobile vertical timeline -->
+<div class="mobile-stage" id="mobileStage" aria-label="Historical timeline">
+  <div class="m-axis" aria-hidden="true"></div>
+  <ul class="m-list" id="mobileList"></ul>
+</div>
+
 <footer>
   <div class="legend">
     <span class="l-high"><i></i>High</span>
@@ -683,8 +702,9 @@
     <span class="l-crisis"><i></i>Crisis</span>
     <span class="l-arch"><i></i>Archetype</span>
     <span class="l-fam"><i></i>Family</span>
+    <span class="l-proj"><i></i>Projected</span>
   </div>
-  <p class="note">Generation and archetype dates are approximate. Gen Z (≈1996–) mapped as today’s Artists per Strauss–Howe; 2009 sits at the late-Millennial / early–Gen Z edge.</p>
+  <p class="note">Generation and archetype dates are approximate. Gen Z (≈1996–) mapped as today’s Artists per Strauss–Howe; 2009 sits at the late-Millennial / early–Gen Z edge. Tap a card on mobile for detail.</p>
 </footer>
 
 <div class="tooltip" id="tooltip" role="tooltip"></div>
@@ -693,7 +713,6 @@
 (function () {
   "use strict";
 
-  // Timeline span: 1900 → 2115
   var YEAR_START = 1900;
   var YEAR_END = 2115;
 
@@ -711,72 +730,61 @@
     artist: "Born in a Crisis, raised in a High. Protected, conformist, cautious; empathic as elders."
   };
 
-  // Historical + projected turnings
   var turnings = [
-    { id: "t-crisis-1", type: "crisis", name: "Crisis", start: 1929, end: 1946, projected: false,
+    { type: "crisis", name: "Crisis", start: 1929, end: 1946, projected: false,
       detail: "Great Depression through World War II — the last Fourth Turning resolved." },
-    { id: "t-high-1", type: "high", name: "High", start: 1946, end: 1964, projected: false,
+    { type: "high", name: "High", start: 1946, end: 1964, projected: false,
       detail: "Post-war boom: strong institutions, collective confidence, American Century conformity." },
-    { id: "t-awake-1", type: "awakening", name: "Awakening", start: 1964, end: 1984, projected: false,
+    { type: "awakening", name: "Awakening", start: 1964, end: 1984, projected: false,
       detail: "Consciousness Revolution — civil rights, counterculture, spiritual upheaval." },
-    { id: "t-unrav-1", type: "unraveling", name: "Unraveling", start: 1984, end: 2008, projected: false,
+    { type: "unraveling", name: "Unraveling", start: 1984, end: 2008, projected: false,
       detail: "Culture wars, deregulation, rising individualism; trust in institutions erodes." },
-    { id: "t-crisis-2", type: "crisis", name: "Crisis", start: 2008, end: 2033, projected: false,
+    { type: "crisis", name: "Crisis", start: 2008, end: 2033, projected: false,
       detail: "Current Fourth Turning — financial crisis onward; expected to resolve into a new High by the early/mid 2030s." },
-    // Next saeculum projection
-    { id: "t-high-2", type: "high", name: "High", start: 2033, end: 2055, projected: true,
+    { type: "high", name: "High", start: 2033, end: 2055, projected: true,
       detail: "Projected next High — rebuilt institutions, renewed collective confidence." },
-    { id: "t-awake-2", type: "awakening", name: "Awakening", start: 2055, end: 2075, projected: true,
+    { type: "awakening", name: "Awakening", start: 2055, end: 2075, projected: true,
       detail: "Projected Awakening — spiritual and cultural upheaval of the next saeculum." },
-    { id: "t-unrav-2", type: "unraveling", name: "Unraveling", start: 2075, end: 2095, projected: true,
+    { type: "unraveling", name: "Unraveling", start: 2075, end: 2095, projected: true,
       detail: "Projected Unraveling — individualism rises again; institutions loosen." },
-    { id: "t-crisis-3", type: "crisis", name: "Crisis", start: 2095, end: 2115, projected: true,
+    { type: "crisis", name: "Crisis", start: 2095, end: 2115, projected: true,
       detail: "Projected Crisis — the defining emergency of the next saeculum." }
   ];
 
-  // Generation birth bands (archetype labels on timeline)
   var archetypes = [
-    { id: "a-gi", arch: "hero", name: "Hero", gen: "G.I. Generation", start: 1901, end: 1924,
+    { arch: "hero", name: "Hero", gen: "G.I. Generation", start: 1901, end: 1924,
       detail: ARCH_COPY.hero + " Anglo-American G.I. Generation, ≈1901–1924." },
-    { id: "a-silent", arch: "artist", name: "Artist", gen: "Silent", start: 1925, end: 1942,
+    { arch: "artist", name: "Artist", gen: "Silent", start: 1925, end: 1942,
       detail: ARCH_COPY.artist + " Silent Generation, ≈1925–1942." },
-    { id: "a-boom", arch: "prophet", name: "Prophet", gen: "Boomers", start: 1943, end: 1960,
+    { arch: "prophet", name: "Prophet", gen: "Boomers", start: 1943, end: 1960,
       detail: ARCH_COPY.prophet + " Baby Boom, ≈1943–1960." },
-    { id: "a-x", arch: "nomad", name: "Nomad", gen: "Generation X", start: 1961, end: 1981,
+    { arch: "nomad", name: "Nomad", gen: "Generation X", start: 1961, end: 1981,
       detail: ARCH_COPY.nomad + " Generation X, ≈1961–1981." },
-    { id: "a-mill", arch: "hero", name: "Hero", gen: "Millennials", start: 1982, end: 2004,
+    { arch: "hero", name: "Hero", gen: "Millennials", start: 1982, end: 2004,
       detail: ARCH_COPY.hero + " Millennials, ≈1982–2004 — today’s Hero archetype." },
-    { id: "a-homel", arch: "artist", name: "Artist", gen: "Homeland / Gen Z", start: 2005, end: 2025,
+    { arch: "artist", name: "Artist", gen: "Homeland / Gen Z", start: 2005, end: 2025,
       detail: ARCH_COPY.artist + " Homeland Generation / Gen Z, ≈2005–2025 (dates approximate)." },
-    { id: "a-next-p", arch: "prophet", name: "Prophet", gen: "Next Prophets", start: 2033, end: 2055,
-      detail: "Projected Prophets of the next saeculum — born in the coming High.", projected: true },
-    { id: "a-next-n", arch: "nomad", name: "Nomad", gen: "Next Nomads", start: 2055, end: 2075,
-      detail: "Projected Nomads of the next saeculum.", projected: true },
-    { id: "a-next-a", arch: "artist", name: "Artist", gen: "Next Artists", start: 2095, end: 2115,
-      detail: "Projected Artists born into the next Crisis.", projected: true }
+    { arch: "prophet", name: "Prophet", gen: "Next Prophets", start: 2033, end: 2055, projected: true,
+      detail: "Projected Prophets of the next saeculum — born in the coming High." },
+    { arch: "nomad", name: "Nomad", gen: "Next Nomads", start: 2055, end: 2075, projected: true,
+      detail: "Projected Nomads of the next saeculum." },
+    { arch: "artist", name: "Artist", gen: "Next Artists", start: 2095, end: 2115, projected: true,
+      detail: "Projected Artists born into the next Crisis." }
   ];
 
   var family = [
-    {
-      id: "f-gf", name: "Grandfather", year: 1908,
+    { name: "Grandfather", year: 1908,
       meta: "G.I. · Hero · early 1900s",
-      detail: "Born early 1900s, G.I. Generation (Hero). Shaped by the Depression and WWII — came of age in the last Crisis."
-    },
-    {
-      id: "f-liam", name: "Liam", year: 1980,
+      detail: "Born early 1900s, G.I. Generation (Hero). Shaped by the Depression and WWII — came of age in the last Crisis." },
+    { name: "Liam", year: 1980,
       meta: "Gen X · Nomad · b. 1980",
-      detail: "Born 1980, Generation X (Nomad). Born near the end of the Awakening; came of age in the Unraveling."
-    },
-    {
-      id: "f-c1", name: "Child · 2009", year: 2009,
+      detail: "Born 1980, Generation X (Nomad). Born near the end of the Awakening; came of age in the Unraveling." },
+    { name: "Child · 2009", year: 2009,
       meta: "Late Millennial / early Gen Z · Artist",
-      detail: "Born 2009 — late Millennial / early Gen Z edge. Treated as Artist (Homeland). Mapping is approximate."
-    },
-    {
-      id: "f-c2", name: "Child · 2013", year: 2013,
+      detail: "Born 2009 — late Millennial / early Gen Z edge. Treated as Artist (Homeland). Mapping is approximate." },
+    { name: "Child · 2013", year: 2013,
       meta: "Gen Z · Artist · b. 2013",
-      detail: "Born 2013, Gen Z (Artist). Born into the current Crisis; will be raised into the projected High. Mapping is approximate."
-    }
+      detail: "Born 2013, Gen Z (Artist). Born into the current Crisis; will be raised into the projected High. Mapping is approximate." }
   ];
 
   var yearTicks = [1900, 1920, 1940, 1960, 1980, 2000, 2020, 2040, 2060, 2080, 2100, 2115];
@@ -784,12 +792,18 @@
   function pct(year) {
     return ((year - YEAR_START) / (YEAR_END - YEAR_START)) * 100;
   }
-
   function widthPct(start, end) {
     return ((end - start) / (YEAR_END - YEAR_START)) * 100;
   }
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
 
-  // ── Build DOM ──────────────────────────────────────────
+  // ── Desktop build ──────────────────────────────────────
   var ticksEl = document.getElementById("ticks");
   var turningsEl = document.getElementById("turnings");
   var connectorsEl = document.getElementById("connectors");
@@ -803,63 +817,55 @@
     var el = document.createElement("div");
     el.className = "tick";
     el.style.left = pct(y) + "%";
-    el.style.animationDelay = (1.5 + i * 0.05) + "s";
     el.innerHTML = '<div class="stem"></div><div class="yr">' + y + "</div>";
     ticksEl.appendChild(el);
-    // reveal after axis draws
     setTimeout(function () { el.classList.add("visible"); }, 1500 + i * 50);
   });
 
   turnings.forEach(function (t, i) {
     var el = document.createElement("div");
     el.className = "turning " + t.type + (t.projected ? " projected" : "");
-    el.dataset.type = t.type;
-    el.dataset.projected = t.projected ? "1" : "0";
-    el.dataset.layer = t.type;
     el.style.left = pct(t.start) + "%";
     el.style.width = widthPct(t.start, t.end) + "%";
     el.style.animationDelay = (1.7 + i * 0.12) + "s";
     var tag = t.projected ? '<div class="tag">Projected</div>' : "";
     el.innerHTML =
       '<div class="band"></div>' +
-      '<div class="label"><div class="name">' + t.name + "</div>" +
+      '<div class="label"><div class="name">' + esc(t.name) + "</div>" +
       '<div class="dates">' + t.start + "–" + t.end + "</div>" + tag + "</div>";
     el.dataset.tipTitle = t.name + (t.projected ? " (projected)" : "");
     el.dataset.tipBody = t.detail + " " + TURNING_COPY[t.type];
     turningsEl.appendChild(el);
 
-    // connector to next
     if (i < turnings.length - 1) {
       var next = turnings[i + 1];
       var c = document.createElement("div");
       c.className = "connector";
-      c.style.left = pct(t.end) + "%";
-      c.style.width = widthPct(t.end, next.start) + "%";
-      if (widthPct(t.end, next.start) < 0.05) {
-        // abutting — place a short flow across the seam
-        c.style.left = pct(t.end) - 0.4 + "%";
+      var w = widthPct(t.end, next.start);
+      if (w < 0.05) {
+        c.style.left = (pct(t.end) - 0.4) + "%";
         c.style.width = "0.8%";
+      } else {
+        c.style.left = pct(t.end) + "%";
+        c.style.width = w + "%";
       }
       c.innerHTML = '<div class="flow"></div>';
       connectorsEl.appendChild(c);
       setTimeout(function () { c.classList.add("ready"); }, 2200 + i * 120);
     }
-
     setTimeout(function () { el.classList.add("enter"); }, 1700 + i * 120);
   });
 
   archetypes.forEach(function (a, i) {
     var mid = (a.start + a.end) / 2;
     var el = document.createElement("div");
-    el.className = "arch " + a.arch + (a.projected ? " projected" : "");
-    el.dataset.layer = "archetypes";
-    el.dataset.projected = a.projected ? "1" : "0";
+    el.className = "arch " + a.arch;
     el.style.left = pct(mid) + "%";
     el.style.animationDelay = (2.0 + i * 0.1) + "s";
     el.innerHTML =
       '<div class="pip"></div>' +
-      '<div class="aname">' + a.name + "</div>" +
-      '<div class="agen">' + a.gen + "</div>";
+      '<div class="aname">' + esc(a.name) + "</div>" +
+      '<div class="agen">' + esc(a.gen) + "</div>";
     el.dataset.tipTitle = a.name + " · " + a.gen;
     el.dataset.tipBody = a.detail;
     archetypesEl.appendChild(el);
@@ -869,48 +875,47 @@
   family.forEach(function (p, i) {
     var el = document.createElement("div");
     el.className = "person";
-    el.dataset.layer = "family";
     el.style.left = pct(p.year) + "%";
     el.style.animationDelay = (2.4 + i * 0.15) + "s";
-    // slight vertical stagger so overlapping kids don't collide
-    if (p.id === "f-c2") el.style.top = "2.2rem";
+    if (p.year === 2013) el.style.top = "2.2rem";
     el.innerHTML =
       '<div class="vline"></div>' +
       '<div class="marker"></div>' +
-      '<div class="pname">' + p.name + "</div>" +
-      '<div class="pmeta">' + p.meta + "</div>";
+      '<div class="pname">' + esc(p.name) + "</div>" +
+      '<div class="pmeta">' + esc(p.meta) + "</div>";
     el.dataset.tipTitle = p.name;
     el.dataset.tipBody = p.detail;
     familyEl.appendChild(el);
     setTimeout(function () { el.classList.add("enter"); }, 2400 + i * 150);
   });
 
-  // ── Tooltip ────────────────────────────────────────────
+  // ── Desktop tooltips (hover) ───────────────────────────
   function showTip(e, title, body) {
     tooltip.innerHTML =
-      '<div class="tt-title">' + title + "</div>" +
-      '<div class="tt-body">' + body + "</div>";
+      '<div class="tt-title">' + esc(title) + "</div>" +
+      '<div class="tt-body">' + esc(body) + "</div>";
     tooltip.classList.add("show");
     moveTip(e);
   }
   function moveTip(e) {
     var pad = 14;
-    var tw = tooltip.offsetWidth;
-    var th = tooltip.offsetHeight;
+    var tw = tooltip.offsetWidth || 200;
+    var th = tooltip.offsetHeight || 80;
     var x = e.clientX + pad;
     var y = e.clientY + pad;
     if (x + tw > window.innerWidth - 8) x = e.clientX - tw - pad;
     if (y + th > window.innerHeight - 8) y = e.clientY - th - pad;
+    if (x < 8) x = 8;
+    if (y < 8) y = 8;
     tooltip.style.left = x + "px";
     tooltip.style.top = y + "px";
   }
-  function hideTip() {
-    tooltip.classList.remove("show");
-  }
+  function hideTip() { tooltip.classList.remove("show"); }
 
   document.getElementById("timeline").addEventListener("pointerover", function (e) {
+    if (window.matchMedia("(max-width: 700px)").matches) return;
     var t = e.target.closest("[data-tip-title]");
-    if (!t || t.classList.contains("hidden-layer")) return;
+    if (!t) return;
     showTip(e, t.dataset.tipTitle, t.dataset.tipBody);
   });
   document.getElementById("timeline").addEventListener("pointermove", function (e) {
@@ -922,43 +927,8 @@
     if (!e.relatedTarget || !t.contains(e.relatedTarget)) hideTip();
   });
 
-  // ── Layer toggles ──────────────────────────────────────
-  function applyLayers() {
-    var active = {};
-    document.querySelectorAll(".toggle").forEach(function (btn) {
-      active[btn.dataset.layer] = btn.classList.contains("active");
-    });
-
-    document.querySelectorAll(".turning").forEach(function (el) {
-      var typeOn = active[el.dataset.type];
-      var projOk = el.dataset.projected !== "1" || active.projection;
-      el.classList.toggle("hidden-layer", !(typeOn && projOk));
-    });
-
-    document.querySelectorAll(".arch").forEach(function (el) {
-      var base = active.archetypes;
-      var projOk = el.dataset.projected !== "1" || active.projection;
-      el.classList.toggle("hidden-layer", !(base && projOk));
-    });
-
-    document.querySelectorAll(".person").forEach(function (el) {
-      el.classList.toggle("hidden-layer", !active.family);
-    });
-
-    // When projection off, also hide projected connectors after last historical
-    // (connectors are decorative; leave them — they sit on the axis)
-  }
-
-  document.getElementById("toggles").addEventListener("click", function (e) {
-    var btn = e.target.closest(".toggle");
-    if (!btn) return;
-    btn.classList.toggle("active");
-    applyLayers();
-  });
-
-  // ── Horizontal scroll: wheel → x, shift-wheel, trackpad ─
+  // Horizontal scroll helpers (desktop)
   scroller.addEventListener("wheel", function (e) {
-    // Prefer horizontal delta; convert vertical to horizontal when dominant
     var dx = e.deltaX;
     var dy = e.deltaY;
     if (e.shiftKey && Math.abs(dy) > Math.abs(dx)) {
@@ -966,30 +936,103 @@
       dy = 0;
     }
     if (Math.abs(dy) > Math.abs(dx) && !e.shiftKey) {
-      // turn vertical wheel into horizontal scroll
       scroller.scrollLeft += dy;
       e.preventDefault();
-    } else if (Math.abs(dx) > 0) {
-      // native handles trackpad horizontal; ensure hint hides
     }
     maybeHideHint();
   }, { passive: false });
 
   function maybeHideHint() {
-    if (scroller.scrollLeft > 40) {
-      scrollHint.classList.add("hidden");
-    }
+    if (scroller.scrollLeft > 40) scrollHint.classList.add("hidden");
   }
   scroller.addEventListener("scroll", maybeHideHint, { passive: true });
-
-  // Start near grandfather era (left), hint invites scrolling right
   scroller.scrollLeft = 0;
 
-  // Keyboard
   scroller.addEventListener("keydown", function (e) {
     var step = 120;
     if (e.key === "ArrowRight") { scroller.scrollLeft += step; e.preventDefault(); }
     if (e.key === "ArrowLeft") { scroller.scrollLeft -= step; e.preventDefault(); }
+  });
+
+  // ── Mobile vertical list ───────────────────────────────
+  // Merge events chronologically: archetype bands, turnings, family
+  var mobileEvents = [];
+
+  turnings.forEach(function (t) {
+    mobileEvents.push({
+      kind: "turning",
+      sort: t.start,
+      className: "turning-item " + t.type + (t.projected ? " projected" : ""),
+      kicker: (t.projected ? "Projected Turning" : "Turning"),
+      title: t.name,
+      sub: t.start + "–" + t.end,
+      detail: t.detail + " " + TURNING_COPY[t.type]
+    });
+  });
+
+  archetypes.forEach(function (a) {
+    mobileEvents.push({
+      kind: "arch",
+      sort: a.start + 0.1,
+      className: "arch-item " + a.arch + (a.projected ? " projected" : ""),
+      kicker: (a.projected ? "Projected Archetype" : "Archetype"),
+      title: a.name,
+      sub: a.gen + " · ≈" + a.start + "–" + a.end,
+      detail: a.detail
+    });
+  });
+
+  family.forEach(function (p) {
+    mobileEvents.push({
+      kind: "person",
+      sort: p.year,
+      className: "person-item",
+      kicker: "Family",
+      title: p.name,
+      sub: p.meta,
+      detail: p.detail
+    });
+  });
+
+  mobileEvents.sort(function (a, b) { return a.sort - b.sort; });
+
+  var mobileList = document.getElementById("mobileList");
+  mobileEvents.forEach(function (ev, i) {
+    var li = document.createElement("li");
+    li.className = "m-item " + ev.className;
+    li.style.animationDelay = (0.35 + i * 0.05) + "s";
+    li.innerHTML =
+      '<span class="m-dot" aria-hidden="true"></span>' +
+      '<div class="m-card" role="button" tabindex="0" aria-expanded="false">' +
+        '<div class="m-kicker">' + esc(ev.kicker) + "</div>" +
+        '<div class="m-title">' + esc(ev.title) + "</div>" +
+        '<div class="m-sub">' + esc(ev.sub) + "</div>" +
+        '<div class="m-detail">' + esc(ev.detail) + "</div>" +
+      "</div>";
+    mobileList.appendChild(li);
+  });
+
+  // Tap-to-expand tooltips on mobile cards
+  mobileList.addEventListener("click", function (e) {
+    var card = e.target.closest(".m-card");
+    if (!card) return;
+    var wasOpen = card.classList.contains("open");
+    mobileList.querySelectorAll(".m-card.open").forEach(function (c) {
+      c.classList.remove("open");
+      c.setAttribute("aria-expanded", "false");
+    });
+    if (!wasOpen) {
+      card.classList.add("open");
+      card.setAttribute("aria-expanded", "true");
+    }
+  });
+
+  mobileList.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    var card = e.target.closest(".m-card");
+    if (!card) return;
+    e.preventDefault();
+    card.click();
   });
 })();
 </script>
