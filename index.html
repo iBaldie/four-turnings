@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Four Turnings — Liam's Family</title>
+<title>Four Turnings</title>
 <style>
   :root {
     --bg: #050505;
@@ -30,7 +30,7 @@
     height: 100%;
     background: var(--bg);
     color: var(--ink);
-    font-family: var(--font);
+    font: 400 16px/1.5 var(--font);
     -webkit-font-smoothing: antialiased;
   }
 
@@ -353,43 +353,8 @@
     margin-top: 0.15rem;
   }
 
-  .family {
-    position: absolute;
-    left: 0; right: 0;
-    top: 74%;
-    height: 22%;
-  }
 
-  .person {
-    position: absolute;
-    top: 0;
-    transform: translateX(-50%);
-    text-align: center;
-    opacity: 0;
-    cursor: default;
-  }
   .person.enter { animation: fadeSlideUpCentered 0.7s var(--ease) forwards; }
-  .person .marker {
-    width: 10px; height: 10px;
-    margin: 0 auto 0.55rem;
-    background: var(--ink);
-    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-  }
-  .person .vline {
-    position: absolute;
-    left: 50%;
-    bottom: 100%;
-    width: 1px;
-    height: 28px;
-    background: linear-gradient(to top, var(--ink-faint), transparent);
-    transform: translateX(-50%);
-    margin-bottom: 0.2rem;
-  }
-  .person .pname {
-    font-size: 0.78rem;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-  }
   .person .pmeta {
     font-size: 0.58rem;
     letter-spacing: 0.08em;
@@ -466,11 +431,6 @@
     border-radius: 50%;
     border: 1px solid var(--ink-muted);
     background: transparent;
-  }
-  .legend .l-fam i {
-    width: 7px; height: 7px;
-    background: var(--ink);
-    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
   }
   .legend .l-proj i {
     width: 12px; height: 0;
@@ -571,15 +531,6 @@
       background: currentColor;
       opacity: 0.85;
     }
-    .m-item.person-item .m-dot {
-      border-radius: 0;
-      background: var(--ink);
-      border: none;
-      width: 9px; height: 9px;
-      clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-      left: 0.4rem;
-      top: 0.4rem;
-    }
     .m-item.arch-item .m-dot { background: transparent; }
 
     .m-item.high { color: var(--high); }
@@ -590,7 +541,6 @@
     .m-item.prophet { color: var(--prophet); }
     .m-item.nomad { color: var(--nomad); }
     .m-item.artist { color: var(--artist); }
-    .m-item.person-item { color: var(--ink); }
 
     .m-card {
       border: 1px solid var(--line);
@@ -662,7 +612,7 @@
 <header>
   <div class="brand">
     <h1>Four Turnings</h1>
-    <p>Strauss &amp; Howe’s saeculum — roughly 80–100 years, four seasons of history — overlaid with Liam’s family line.</p>
+    <p>Strauss &amp; Howe’s saeculum — roughly 80–100 years, four seasons of history.</p>
   </div>
 </header>
 
@@ -683,7 +633,6 @@
       <div class="turnings" id="turnings"></div>
       <div class="connectors" id="connectors"></div>
       <div class="archetypes" id="archetypes"></div>
-      <div class="family" id="family"></div>
     </div>
   </div>
 </div>
@@ -701,10 +650,9 @@
     <span class="l-unraveling"><i></i>Unraveling</span>
     <span class="l-crisis"><i></i>Crisis</span>
     <span class="l-arch"><i></i>Archetype</span>
-    <span class="l-fam"><i></i>Family</span>
     <span class="l-proj"><i></i>Projected</span>
   </div>
-  <p class="note">Generation and archetype dates are approximate. Gen Z (≈1996–) mapped as today’s Artists per Strauss–Howe; 2009 sits at the late-Millennial / early–Gen Z edge. Tap a card on mobile for detail.</p>
+  <p class="note">Generation and archetype dates are approximate. Gen Z (≈1996–) mapped as today’s Artists per Strauss–Howe. Tap a card on mobile for detail.</p>
 </footer>
 
 <div class="tooltip" id="tooltip" role="tooltip"></div>
@@ -772,20 +720,6 @@
       detail: "Projected Artists born into the next Crisis." }
   ];
 
-  var family = [
-    { name: "Grandfather", year: 1908,
-      meta: "G.I. · Hero · early 1900s",
-      detail: "Born early 1900s, G.I. Generation (Hero). Shaped by the Depression and WWII — came of age in the last Crisis." },
-    { name: "Liam", year: 1980,
-      meta: "Gen X · Nomad · b. 1980",
-      detail: "Born 1980, Generation X (Nomad). Born near the end of the Awakening; came of age in the Unraveling." },
-    { name: "Child · 2009", year: 2009,
-      meta: "Late Millennial / early Gen Z · Artist",
-      detail: "Born 2009 — late Millennial / early Gen Z edge. Treated as Artist (Homeland). Mapping is approximate." },
-    { name: "Child · 2013", year: 2013,
-      meta: "Gen Z · Artist · b. 2013",
-      detail: "Born 2013, Gen Z (Artist). Born into the current Crisis; will be raised into the projected High. Mapping is approximate." }
-  ];
 
   var yearTicks = [1900, 1920, 1940, 1960, 1980, 2000, 2020, 2040, 2060, 2080, 2100, 2115];
 
@@ -808,7 +742,6 @@
   var turningsEl = document.getElementById("turnings");
   var connectorsEl = document.getElementById("connectors");
   var archetypesEl = document.getElementById("archetypes");
-  var familyEl = document.getElementById("family");
   var tooltip = document.getElementById("tooltip");
   var scroller = document.getElementById("scroller");
   var scrollHint = document.getElementById("scrollHint");
@@ -872,22 +805,6 @@
     setTimeout(function () { el.classList.add("enter"); }, 2000 + i * 100);
   });
 
-  family.forEach(function (p, i) {
-    var el = document.createElement("div");
-    el.className = "person";
-    el.style.left = pct(p.year) + "%";
-    el.style.animationDelay = (2.4 + i * 0.15) + "s";
-    if (p.year === 2013) el.style.top = "2.2rem";
-    el.innerHTML =
-      '<div class="vline"></div>' +
-      '<div class="marker"></div>' +
-      '<div class="pname">' + esc(p.name) + "</div>" +
-      '<div class="pmeta">' + esc(p.meta) + "</div>";
-    el.dataset.tipTitle = p.name;
-    el.dataset.tipBody = p.detail;
-    familyEl.appendChild(el);
-    setTimeout(function () { el.classList.add("enter"); }, 2400 + i * 150);
-  });
 
   // ── Desktop tooltips (hover) ───────────────────────────
   function showTip(e, title, body) {
@@ -955,7 +872,7 @@
   });
 
   // ── Mobile vertical list ───────────────────────────────
-  // Merge events chronologically: archetype bands, turnings, family
+  // Merge events chronologically: turnings and archetype bands
   var mobileEvents = [];
 
   turnings.forEach(function (t) {
@@ -982,17 +899,6 @@
     });
   });
 
-  family.forEach(function (p) {
-    mobileEvents.push({
-      kind: "person",
-      sort: p.year,
-      className: "person-item",
-      kicker: "Family",
-      title: p.name,
-      sub: p.meta,
-      detail: p.detail
-    });
-  });
 
   mobileEvents.sort(function (a, b) { return a.sort - b.sort; });
 
