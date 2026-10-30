@@ -35,12 +35,18 @@
   }
   body { display: flex; flex-direction: column; overflow: hidden; }
 
+
   header {
     flex: 0 0 auto;
-    padding: 1.25rem 2.5rem 0.5rem;
+    padding: 1.1rem 2.5rem 0.65rem;
     opacity: 0;
     animation: fadeIn 0.7s var(--ease) 0.05s forwards;
     z-index: 20;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem 2rem;
   }
   .brand h1 {
     font-size: clamp(1.05rem, 2vw, 1.4rem);
@@ -48,6 +54,33 @@
     letter-spacing: 0.18em;
     text-transform: uppercase;
   }
+  .turning-head {
+    text-align: right;
+    min-width: min(100%, 22rem);
+  }
+  .turning-head .th-ordinal {
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .turning-head .th-name {
+    margin-top: 0.15rem;
+    font-size: clamp(0.95rem, 1.6vw, 1.2rem);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    line-height: 1.25;
+  }
+  .turning-head .th-meta {
+    margin-top: 0.2rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+  }
+  .turning-head.high .th-name { color: var(--high); }
+  .turning-head.awakening .th-name { color: var(--awakening); }
+  .turning-head.unraveling .th-name { color: var(--unraveling); }
+  .turning-head.crisis .th-name { color: var(--crisis); }
   .chain {
     flex: 0 0 auto;
     padding: 0 2.5rem 0.4rem;
@@ -267,10 +300,23 @@
   @media (max-width: 700px) {
     html, body { height: 100%; overflow: hidden; }
     header {
-      padding: 0.7rem 1rem 0.25rem;
+      padding: 0.65rem 1rem 0.35rem;
       animation: none; opacity: 1;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.45rem;
     }
     .brand h1 { font-size: 0.95rem; letter-spacing: 0.16em; }
+    .turning-head {
+      text-align: left;
+      min-width: 0;
+      width: 100%;
+      padding-top: 0.15rem;
+      border-top: 1px solid var(--line);
+    }
+    .turning-head .th-ordinal { font-size: 0.52rem; }
+    .turning-head .th-name { font-size: 1.0rem; }
+    .turning-head .th-meta { font-size: 0.58rem; }
     .chain { display: none; }
     .desktop-stage { display: none !important; }
 
@@ -400,6 +446,11 @@
 <header>
   <div class="brand">
     <h1>Four Turnings</h1>
+  </div>
+  <div class="turning-head crisis" id="turningHead" aria-live="polite">
+    <div class="th-ordinal" id="thOrdinal">Fourth Turning · Crisis</div>
+    <div class="th-name" id="thName">—</div>
+    <div class="th-meta" id="thMeta">—</div>
   </div>
 </header>
 <div class="chain">
@@ -653,10 +704,13 @@
   function lerp(a, b, t) { return a + (b - a) * t; }
   function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 
-  var SPAN_MIN = 12 * MS_SEC;          // deep zoom: ~12 seconds visible
+  var SPAN_MIN = 12 * MS_SEC;          // absolute floor (not the rest pose)
   var SPAN_MAX = (YEAR_END - YEAR_START) * MS_YEAR;
-  var SPAN_SETTLE = reducedMotion ? (40 * MS_YEAR) : SPAN_MIN;
+  // Rest far enough out that the tape drifts slowly (hours scale)
+  var SPAN_SETTLE = reducedMotion ? (40 * MS_YEAR) : (4 * MS_HOUR);
   var SPAN_OVERVIEW = SPAN_MAX;
+  // Scroll flings rarely need full centuries; soft-cap unless energy is high
+  var SPAN_FLING_SOFT = 25 * MS_YEAR;
 
   // log-space zoom for smooth feel across orders of magnitude
   function spanToZoom(span) { return Math.log(span); }
@@ -670,16 +724,19 @@
   var scrollEnergy = 0; // drives temporary zoom-out
   var lastFrame = performance.now();
   var introT0 = performance.now();
-  var introDur = reducedMotion ? 0 : 2800;
+  var introDur = reducedMotion ? 0 : 3200;
   var introDone = reducedMotion;
 
   var holdSpan = null; // test/debug override
+  var smoothEnergy = 0; // lagged copy of scrollEnergy for inertia
+  var Z_FLING_SOFT = spanToZoom(SPAN_FLING_SOFT);
   function currentSpan() {
     if (holdSpan != null) return holdSpan;
-    // energy pushes toward overview (ease-in-out curve so mid flings land mid-zoom)
-    var e = clamp(scrollEnergy, 0, 1);
+    // Soft-cap most of the travel; only the top of the energy curve reaches full overview
+    var e = clamp(smoothEnergy, 0, 1);
     var eased = e * e * (3 - 2 * e);
-    var zBusy = lerp(zoomTarget, Z_MAX, eased);
+    var zCap = e < 0.72 ? Z_FLING_SOFT : lerp(Z_FLING_SOFT, Z_MAX, (e - 0.72) / 0.28);
+    var zBusy = lerp(zoomTarget, zCap, eased);
     // during intro, ease from overview to settle
     if (!introDone) {
       var p = clamp((performance.now() - introT0) / introDur, 0, 1);
@@ -687,7 +744,9 @@
       if (p >= 1) { introDone = true; zoom = Z_SETTLE; zoomTarget = Z_SETTLE; }
       return zoomToSpan(zIntro);
     }
-    zoom += (zBusy - zoom) * 0.18;
+    // Heavy smoothing — slow follow toward busy zoom, slower return toward settle
+    var towardOut = zBusy > zoom;
+    zoom += (zBusy - zoom) * (towardOut ? 0.055 : 0.028);
     return zoomToSpan(zoom);
   }
 
@@ -956,7 +1015,8 @@
 
     nowClock.textContent = formatClock(nowMs);
     zoomHud.textContent = "Zoom · " + zoomLabel(span);
-    if (!reducedMotion && introDone && scrollEnergy < 0.05) nowMarker.classList.add("pulse");
+    updateTurningHead(msToYear(nowMs));
+    if (!reducedMotion && introDone && smoothEnergy < 0.08) nowMarker.classList.add("pulse");
     else if (reducedMotion) nowMarker.classList.remove("pulse");
   }
 
@@ -1048,6 +1108,35 @@
     return saecula[saecula.length - 1];
   }
 
+  var TURNING_ORDINAL = {
+    high: { n: "First", label: "High" },
+    awakening: { n: "Second", label: "Awakening" },
+    unraveling: { n: "Third", label: "Unraveling" },
+    crisis: { n: "Fourth", label: "Crisis" }
+  };
+  var turningHead = document.getElementById("turningHead");
+  var thOrdinal = document.getElementById("thOrdinal");
+  var thName = document.getElementById("thName");
+  var thMeta = document.getElementById("thMeta");
+  var lastHeadKey = "";
+
+  function updateTurningHead(year) {
+    if (!turningHead) return;
+    var tn = turningAt(year);
+    var sc = saeculumAt(year);
+    var ord = TURNING_ORDINAL[tn.type] || { n: "", label: archTitle(tn.type) };
+    var key = tn.name + "|" + tn.start + "|" + sc.name;
+    if (key === lastHeadKey) return;
+    lastHeadKey = key;
+    turningHead.className = "turning-head " + tn.type;
+    thOrdinal.textContent = ord.n + " Turning · " + ord.label;
+    thName.textContent = tn.name;
+    thMeta.textContent = tn.start + "–" + tn.end +
+      (tn.projected ? " · projected" : "") +
+      " · " + sc.name + " saeculum";
+  }
+
+
   function yForMs(ms, focusMs, span, height) {
     return ((ms - focusMs) / span + 0.5) * height;
   }
@@ -1055,6 +1144,7 @@
   function updateReadout(nowMs, span) {
     var year = msToYear(nowMs);
     var yInt = Math.floor(year);
+    updateTurningHead(year);
     roYear.textContent = String(yInt);
     cursorYear.textContent = span < 2 * MS_DAY ? formatTick(nowMs, span < 2 * MS_HOUR ? "minute" : "hour", true) : String(yInt);
     roClock.textContent = formatClock(nowMs);
@@ -1190,8 +1280,8 @@
 
   function onWheel(e) {
     e.preventDefault();
-    var speed = Math.min(1, Math.hypot(e.deltaX, e.deltaY) / 180);
-    bumpEnergy(0.12 + speed * 0.75);
+    var speed = Math.min(1, Math.hypot(e.deltaX, e.deltaY) / 320);
+    bumpEnergy(0.025 + speed * 0.18);
   }
 
   var touchState = null;
@@ -1210,12 +1300,12 @@
     var dx = x - touchState.x;
     var v = Math.hypot(dx, dy) / dt; // px/ms
     touchState = { y: y, x: x, t: t, vy: v };
-    bumpEnergy(clamp(v * 18, 0.04, 0.85));
+    bumpEnergy(clamp(v * 4.5, 0.015, 0.35));
   }
   function onTouchEnd() {
     if (!touchState) return;
-    // fling
-    bumpEnergy(clamp(touchState.vy * 40, 0, 1));
+    // gentle fling
+    bumpEnergy(clamp(touchState.vy * 10, 0, 0.55));
     touchState = null;
   }
 
@@ -1305,7 +1395,9 @@
     var dt = Math.min(0.05, (now - lastFrame) / 1000);
     lastFrame = now;
     // decay scroll energy
-    scrollEnergy = Math.max(0, scrollEnergy - dt * 0.28);
+    // Lag + slow decay → controllable inertia, leisurely ease back to rest
+    smoothEnergy += (scrollEnergy - smoothEnergy) * Math.min(1, dt * 3.2);
+    scrollEnergy = Math.max(0, scrollEnergy - dt * 0.14);
 
     var nowMs = Date.now();
     var span = currentSpan();
@@ -1328,10 +1420,10 @@
     setEnergy: function (e) { holdSpan = null; scrollEnergy = clamp(e, 0, 1); },
     holdSpanMs: function (ms) { holdSpan = ms == null ? null : clamp(ms, SPAN_MIN, SPAN_MAX); },
     holdZoom: function (level) {
-      // level: "close" | "mid" | "out"
+      // level: "rest" | "close" | "mid" | "out"
       holdSpan = null;
-      if (level === "close") holdSpan = SPAN_MIN;
-      else if (level === "mid") holdSpan = 3 * MS_YEAR;
+      if (level === "rest" || level === "close") holdSpan = SPAN_SETTLE;
+      else if (level === "mid") holdSpan = 8 * MS_YEAR;
       else if (level === "out") holdSpan = SPAN_MAX;
       else holdSpan = null;
     },
