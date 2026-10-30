@@ -16,11 +16,18 @@
     --awakening: #c4a35a;
     --unraveling: #a67c7c;
     --crisis: #c45c4a;
-    --hero: #7eb8d4;
-    --prophet: #d4b87e;
-    --nomad: #b89e7e;
-    --artist: #9eb89e;
+    /* Same hue as the turning this archetype comes of age in */
+    --hero: var(--crisis);
+    --prophet: var(--awakening);
+    --nomad: var(--unraveling);
+    --artist: var(--high);
     --event: rgba(255,255,255,0.7);
+    --stage-label-h: 1.15rem;
+    --stage-overlap: 0rem;
+    --stage-row-h: 1.42rem;
+    --stage-row-gap: 0.28rem;
+    --stage-slot: calc(var(--stage-label-h) + var(--stage-row-h) - var(--stage-overlap));
+    --now-end: 4%;
     --font: "Helvetica Neue", Helvetica, Arial, sans-serif;
     --ease: cubic-bezier(0.22, 1, 0.36, 1);
   }
@@ -47,6 +54,10 @@
 
   header {
     flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
     padding: 1.25rem 2.5rem 0.5rem;
     opacity: 0;
     animation: fadeIn 0.7s var(--ease) 0.05s forwards;
@@ -92,7 +103,11 @@
     animation: fadeIn 0.7s var(--ease) 0.25s forwards;
     line-height: 1.55;
   }
-  .chain strong { color: var(--ink-muted); font-weight: 500; }
+  .chain strong { font-weight: 500; }
+  .chain strong.hero { color: var(--hero); }
+  .chain strong.prophet { color: var(--prophet); }
+  .chain strong.nomad { color: var(--nomad); }
+  .chain strong.artist { color: var(--artist); }
 
   .desktop-stage {
     flex: 1 1 auto;
@@ -110,35 +125,50 @@
   .edge-fade.left { left: 0; background: linear-gradient(90deg, var(--bg), transparent); }
   .edge-fade.right { right: 0; background: linear-gradient(270deg, var(--bg), transparent); }
 
-  .zoom-controls {
-    position: absolute; top: 0.65rem; right: 1.1rem; z-index: 14;
-    display: flex; align-items: center; gap: 0.35rem;
-    padding: 0.28rem 0.4rem;
-    background: rgba(8,8,8,0.82);
-    border: 1px solid var(--line-strong);
-    border-radius: 3px;
-    backdrop-filter: blur(6px);
-  }
-  .zoom-controls button {
-    appearance: none; border: 1px solid var(--line-strong);
-    background: rgba(255,255,255,0.06);
-    color: var(--ink); cursor: pointer;
-    width: 1.55rem; height: 1.55rem;
+  .view-reset {
+    position: relative;
+    flex: 0 0 auto;
+    width: 1.8rem; height: 1.8rem;
     display: inline-flex; align-items: center; justify-content: center;
-    font-size: 0.85rem; line-height: 1; border-radius: 2px;
-    padding: 0;
+    appearance: none; border: none; background: transparent;
+    color: rgba(255,255,255,0.62); cursor: pointer; padding: 0;
   }
-  .zoom-controls button:hover { background: rgba(255,255,255,0.14); color: #fff; }
-  .zoom-controls button:focus-visible {
-    outline: 1px solid rgba(255,255,255,0.65); outline-offset: 1px;
+  .view-reset svg { width: 1.15rem; height: 1.15rem; fill: currentColor; display: block; }
+  .view-reset:hover { color: #fff; }
+  .view-reset:focus-visible {
+    outline: 1px solid rgba(255,255,255,0.65); outline-offset: 2px;
   }
-  .zoom-controls .zoom-level {
-    min-width: 4.2rem; text-align: center;
-    font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--ink-muted); font-variant-numeric: tabular-nums;
+
+  .pivot-line {
+    position: absolute; top: 0; bottom: 0; left: 50%;
+    width: 1px; transform: translateX(-50%);
+    background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.28) 18%, rgba(255,255,255,0.28) 82%, transparent 100%);
+    pointer-events: none; z-index: 8;
+    opacity: 0;
+    transition: opacity 0.25s ease;
   }
-  .zoom-controls .zoom-reset svg {
-    width: 0.85rem; height: 0.85rem; fill: currentColor; display: block;
+  .pivot-line.show { opacity: 1; }
+
+  .now-jump {
+    position: absolute; top: 46%; z-index: 14;
+    width: 1.8rem; height: 2.2rem;
+    display: inline-flex; align-items: center; justify-content: center;
+    appearance: none; border: none; background: transparent;
+    color: rgba(255,255,255,0.28); cursor: pointer; padding: 0;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.35s var(--ease), color 0.2s;
+  }
+  .now-jump svg {
+    width: 1.15rem; height: 1.15rem; display: block;
+    fill: none; stroke: currentColor; stroke-width: 1.4;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .now-jump.left { left: 0.55rem; }
+  .now-jump.right { right: 0.55rem; transform: scaleX(-1); }
+  .now-jump.show { opacity: 1; pointer-events: auto; }
+  .now-jump:hover { color: rgba(255,255,255,0.8); }
+  .now-jump:focus-visible {
+    outline: 1px solid rgba(255,255,255,0.65); outline-offset: 2px; opacity: 1;
   }
 
   .scroll-hint {
@@ -155,11 +185,10 @@
     min-height: 0;
     height: 100%;
     overflow-x: auto; overflow-y: hidden;
-    scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
     scrollbar-color: rgba(255,255,255,0.15) transparent;
-    padding: 0 2rem;
   }
   .timeline-scroll::-webkit-scrollbar { height: 4px; }
   .timeline-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
@@ -172,6 +201,8 @@
     /* ~680 years × ~9px */
     width: 6200px;
     padding: 0.6rem 0 1.1rem;
+    /* Bands wider than the current year window must not stretch the scroll range. */
+    overflow: hidden;
   }
 
   .saecula-band {
@@ -182,7 +213,14 @@
     border-left: 1px solid var(--line);
     padding: 0.15rem 0.5rem 0;
     opacity: 0;
-    animation: fadeSlideUp 0.55s var(--ease) forwards;
+    overflow: hidden;
+    animation: fadeIn 0.55s var(--ease) forwards;
+  }
+  .saeculum .shead {
+    position: absolute; top: 0.12rem; left: 0.45rem;
+    max-width: calc(100% - 0.7rem);
+    text-align: left;
+    z-index: 1; pointer-events: none;
   }
   .saeculum .sname {
     font-size: 0.55rem; letter-spacing: 0.14em; text-transform: uppercase;
@@ -190,16 +228,18 @@
   }
   .saeculum .syears {
     font-size: 0.5rem; letter-spacing: 0.06em; color: var(--ink-faint);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
+  .saeculum.continues-left { border-left-color: transparent; }
 
   .turnings {
     position: absolute; left: 0; right: 0; top: 7%; height: 16%;
   }
   .turning {
     position: absolute; top: 0; bottom: 0; opacity: 0;
-    transform: translateY(8px);
+    overflow: hidden;
   }
-  .turning.enter { animation: fadeSlideUp 0.55s var(--ease) forwards; }
+  .turning.enter { animation: fadeIn 0.55s var(--ease) forwards; }
   .turning .band {
     position: absolute; inset: 0;
     border-top: 1px solid currentColor; opacity: 0.7;
@@ -215,8 +255,9 @@
   .turning.crisis { color: var(--crisis); }
   .turning.projected .band { border-top-style: dashed; opacity: 0.4; }
   .turning .label {
-    position: absolute; left: 0.4rem; top: 0.35rem;
-    max-width: calc(100% - 0.5rem);
+    position: absolute; left: 0.45rem; top: 0.35rem;
+    max-width: calc(100% - 0.7rem);
+    text-align: left;
   }
   .turning .label .name {
     font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase;
@@ -225,14 +266,18 @@
   }
   .turning .label .dates {
     font-size: 0.5rem; letter-spacing: 0.05em; color: var(--ink-faint);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
 
   .events {
-    position: absolute; left: 0; right: 0; top: 24%; height: 22%;
+    position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+    pointer-events: none;
   }
   .event {
     position: absolute; transform: translateX(-50%);
     text-align: center; cursor: default; opacity: 0;
+    pointer-events: auto;
+    z-index: 2;
   }
   .event.enter { animation: fadeSlideUpCentered 0.45s var(--ease) forwards; }
   .event .etick {
@@ -249,9 +294,6 @@
   .event .eyear {
     font-size: 0.45rem; letter-spacing: 0.06em; color: var(--ink-faint);
   }
-  .event.lane-0 { top: 4%; }
-  .event.lane-1 { top: 36%; }
-  .event.lane-2 { top: 68%; }
   .event.live {
     opacity: 0.72;
   }
@@ -284,80 +326,97 @@
     margin-top: 0.3rem; font-size: 0.52rem; letter-spacing: 0.1em;
     color: var(--ink-faint); text-align: center; white-space: nowrap;
   }
+  .tick .yr .sub {
+    display: block;
+    margin-top: 0.08rem;
+    font-size: 0.48rem;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.45);
+  }
 
-  /* Life-stage rows — generational diagonal */
-  .stages {
-    position: absolute; left: 0; right: 0; top: 50%; height: 36%;
+  /* Life-stage rows — key sits above the bar so cohorts scroll underneath */
+  .stages,
+  .stage-key {
+    position: absolute; left: 0; right: 0;
+    bottom: var(--now-end);
+    height: calc(4 * var(--stage-slot) + 3 * var(--stage-row-gap));
   }
-  .stage-row {
-    position: absolute; left: 0; right: 0; height: 24%;
-    border-top: 1px solid rgba(255,255,255,0.05);
+  .stage-key {
+    z-index: 13;
+    pointer-events: none;
   }
-  .stage-row[data-stage="elder"] { top: 0; }
-  .stage-row[data-stage="midlife"] { top: 25%; }
-  .stage-row[data-stage="young"] { top: 50%; }
-  .stage-row[data-stage="child"] { top: 75%; }
+  .stage-row,
+  .stage-key-row {
+    position: absolute; left: 0; right: 0;
+  }
+  .stage-row { height: var(--stage-row-h); }
+  .stage-key-row { height: var(--stage-slot); }
+  .stage-row[data-stage="elder"] { top: calc(var(--stage-label-h) - var(--stage-overlap)); }
+  .stage-key-row[data-stage="elder"] { top: 0; }
+  .stage-row[data-stage="midlife"] { top: calc(1 * (var(--stage-slot) + var(--stage-row-gap)) + var(--stage-label-h) - var(--stage-overlap)); }
+  .stage-key-row[data-stage="midlife"] { top: calc(1 * (var(--stage-slot) + var(--stage-row-gap))); }
+  .stage-row[data-stage="young"] { top: calc(2 * (var(--stage-slot) + var(--stage-row-gap)) + var(--stage-label-h) - var(--stage-overlap)); }
+  .stage-key-row[data-stage="young"] { top: calc(2 * (var(--stage-slot) + var(--stage-row-gap))); }
+  .stage-row[data-stage="child"] { top: calc(3 * (var(--stage-slot) + var(--stage-row-gap)) + var(--stage-label-h) - var(--stage-overlap)); }
+  .stage-key-row[data-stage="child"] { top: calc(3 * (var(--stage-slot) + var(--stage-row-gap))); }
   .stage-label {
-    position: sticky; left: 0; z-index: 2;
-    display: inline-block;
-    padding: 0.22rem 0.85rem 0.22rem 0.45rem;
-    font-size: 0.52rem; letter-spacing: 0.14em; text-transform: uppercase;
-    font-weight: 500;
-    color: rgba(255,255,255,0.88);
-    background: linear-gradient(90deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.75) 55%, transparent 100%);
-    border-radius: 2px;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    position: absolute;
+    left: 2.5rem;
+    top: 0;
+    height: var(--stage-label-h);
+    display: flex;
+    align-items: flex-end;
+    box-sizing: border-box;
+    padding: 0.28rem 0.15rem 0.42rem;
+    font-size: 0.55rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    line-height: 1;
+    color: var(--ink-muted);
+    white-space: nowrap;
   }
   .gen-chip {
-    position: absolute; top: 18%; height: 64%;
+    position: absolute; top: 0; bottom: 0;
     left: 0;
-    transform: none;
-    padding: 0 0.45rem;
-    border: 1px solid currentColor;
-    border-radius: 1px;
-    font-size: 0.48rem; letter-spacing: 0.06em; text-transform: uppercase;
-    color: inherit;
-    background: color-mix(in srgb, currentColor 14%, rgba(0,0,0,0.55));
-    white-space: nowrap; cursor: default; opacity: 0;
-    display: flex; align-items: center; gap: 0.3rem;
     overflow: hidden;
-    box-sizing: border-box;
+    cursor: default; opacity: 0;
+    color: inherit;
   }
-  .gen-chip.enter { animation: fadeSlideUp 0.45s var(--ease) forwards; }
-  .gen-chip .garch { opacity: 0.7; font-size: 0.42rem; letter-spacing: 0.08em; flex-shrink: 0; }
-  .gen-chip > span:first-child {
-    overflow: hidden; text-overflow: ellipsis; min-width: 0;
+  .gen-chip.enter { animation: fadeIn 0.45s var(--ease) forwards; }
+  .gen-chip .band {
+    position: absolute; inset: 0;
+    border-left: 1px solid currentColor;
+    opacity: 0.7;
+    pointer-events: none;
+  }
+  .gen-chip .band::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, currentColor, transparent);
+    opacity: 0.14;
+  }
+  .gen-chip .label {
+    position: absolute; left: 0.45rem; top: 0; bottom: 0;
+    display: flex; flex-direction: column; justify-content: center;
+    max-width: calc(100% - 0.6rem);
+    text-align: left;
+    pointer-events: none;
+  }
+  .gen-chip .name {
+    font-size: 0.48rem; letter-spacing: 0.1em; text-transform: uppercase;
+    font-weight: 500; color: currentColor; line-height: 1.15;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .gen-chip .dates {
+    font-size: 0.4rem; letter-spacing: 0.04em; color: var(--ink-faint); line-height: 1.15;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .gen-chip.hero { color: var(--hero); }
   .gen-chip.prophet { color: var(--prophet); }
   .gen-chip.nomad { color: var(--nomad); }
   .gen-chip.artist { color: var(--artist); }
-  .gen-chip.projected { border-style: dashed; opacity: 0.8; }
-
-  .gens-birth {
-    position: absolute; left: 0; right: 0; top: 88%; height: 10%;
-  }
-  .gbirth {
-    position: absolute; top: 8%; height: 70%;
-    max-height: 2rem;
-    border-left: 2px solid currentColor;
-    padding-left: 0.35rem;
-    opacity: 0; cursor: default;
-  }
-  .gbirth.enter { animation: fadeSlideUp 0.45s var(--ease) forwards; }
-  .gbirth.hero { color: var(--hero); }
-  .gbirth.prophet { color: var(--prophet); }
-  .gbirth.nomad { color: var(--nomad); }
-  .gbirth.artist { color: var(--artist); }
-  .gbirth.projected { border-left-style: dashed; }
-  .gbirth .gn {
-    font-size: 0.52rem; letter-spacing: 0.08em; text-transform: uppercase;
-    font-weight: 500; white-space: nowrap;
-  }
-  .gbirth .gy {
-    font-size: 0.45rem; letter-spacing: 0.04em; color: var(--ink-faint);
-    white-space: nowrap;
-  }
+  .gen-chip.projected .band { border-left-style: dashed; opacity: 0.4; }
+  .gen-chip.continues-left .band { border-left-color: transparent; }
 
   .tooltip {
     position: fixed; z-index: 100; max-width: min(300px, calc(100vw - 2rem));
@@ -381,7 +440,7 @@
   }
   @keyframes fadeSlideUp {
     from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
+    to { opacity: 1; transform: none; }
   }
   @keyframes fadeSlideUpCentered {
     from { opacity: 0; transform: translateX(-50%) translateY(8px); }
@@ -390,7 +449,7 @@
 
 
   .now-marker {
-    position: absolute; top: 7%; bottom: 4%;
+    position: absolute; top: 7%; bottom: var(--now-end);
     width: 2px; transform: translateX(-50%);
     background: rgba(255,255,255,0.75);
     z-index: 9; pointer-events: none;
@@ -418,10 +477,10 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .now-marker.pulse .now-glow { animation: none; }
-    header, .chain, .scroll-hint, .saeculum, .turning, .event, .tick, .gen-chip, .gbirth, .axis {
+    header, .chain, .scroll-hint, .saeculum, .turning, .event, .tick, .gen-chip, .axis {
       animation: none !important; opacity: 1 !important; transform: none !important;
     }
-    .turning, .event, .tick, .gen-chip, .gbirth { opacity: 1; }
+    .turning, .event, .tick, .gen-chip { opacity: 1; }
   }
 
   /* Mobile */
@@ -509,12 +568,7 @@
       gap: 0.4rem;
     }
     .site-footer .note { flex: 0 0 auto; width: 100%; max-width: none; }
-    .zoom-controls {
-      top: 0.4rem; right: 0.5rem;
-      padding: 0.22rem 0.32rem;
-    }
-    .zoom-controls button { width: 1.7rem; height: 1.7rem; }
-    .mobile-stage > .zoom-controls { position: absolute; }
+    .view-reset { width: 1.7rem; height: 1.7rem; }
 
     .tape-readout {
       flex: 0 0 auto;
@@ -731,24 +785,29 @@
   <div class="brand">
     <h1>Four Turnings</h1>
   </div>
+  <button type="button" class="view-reset" id="viewReset" aria-label="Reset view to now">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+  </button>
   <div class="turning-fall crisis" id="turningFall" aria-hidden="true"></div>
 </header>
 <div class="chain">
-  <strong>HEROES</strong> RAISE <strong>PROPHETS</strong> RAISE <strong>NOMADS</strong> RAISE <strong>ARTISTS</strong> RAISE THE NEXT HEROES
+  <strong class="hero">HEROES</strong> RAISE <strong class="prophet">PROPHETS</strong> RAISE <strong class="nomad">NOMADS</strong> RAISE <strong class="artist">ARTISTS</strong> RAISE THE NEXT HEROES
 </div>
 
 <div class="desktop-stage" id="desktopStage">
   <div class="edge-fade left" aria-hidden="true"></div>
   <div class="edge-fade right" aria-hidden="true"></div>
-  <div class="zoom-controls" id="zoomControls" role="group" aria-label="Timeline zoom">
-    <button type="button" class="zoom-out" id="zoomOutBtn" aria-label="Zoom out">−</button>
-    <span class="zoom-level" id="zoomLevelLabel" aria-live="polite">Overview</span>
-    <button type="button" class="zoom-in" id="zoomInBtn" aria-label="Zoom in">+</button>
-    <button type="button" class="zoom-reset" id="zoomResetBtn" aria-label="Reset zoom to default view">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
-    </button>
-  </div>
+  <div class="pivot-line" id="pivotLine" aria-hidden="true"></div>
+  <button type="button" class="now-jump left" id="nowJump" aria-label="Ease to now">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>
+  </button>
   <div class="scroll-hint" id="scrollHint">›› Scroll · span 1435–2110s</div>
+  <div class="stage-key">
+    <div class="stage-key-row" data-stage="elder"><span class="stage-label">Elder</span></div>
+    <div class="stage-key-row" data-stage="midlife"><span class="stage-label">Midlife</span></div>
+    <div class="stage-key-row" data-stage="young"><span class="stage-label">Young adult</span></div>
+    <div class="stage-key-row" data-stage="child"><span class="stage-label">Childhood</span></div>
+  </div>
   <div class="timeline-scroll" id="scroller" tabindex="0" aria-label="Historical timeline">
     <div class="timeline" id="timeline">
       <div class="saecula-band" id="saecula"></div>
@@ -757,25 +816,16 @@
       <div class="axis"></div>
       <div class="ticks" id="ticks"></div>
       <div class="stages" id="stages">
-        <div class="stage-row" data-stage="elder"><span class="stage-label">Elder</span></div>
-        <div class="stage-row" data-stage="midlife"><span class="stage-label">Midlife</span></div>
-        <div class="stage-row" data-stage="young"><span class="stage-label">Young adult</span></div>
-        <div class="stage-row" data-stage="child"><span class="stage-label">Childhood</span></div>
+        <div class="stage-row" data-stage="elder"></div>
+        <div class="stage-row" data-stage="midlife"></div>
+        <div class="stage-row" data-stage="young"></div>
+        <div class="stage-row" data-stage="child"></div>
       </div>
-      <div class="gens-birth" id="gensBirth"></div>
     </div>
   </div>
 </div>
 
 <div class="mobile-stage" id="mobileStage" aria-label="Year tape timeline">
-  <div class="zoom-controls" id="zoomControlsMobile" role="group" aria-label="Timeline zoom">
-    <button type="button" class="zoom-out" id="zoomOutBtnM" aria-label="Zoom out">−</button>
-    <span class="zoom-level" id="zoomLevelLabelM" aria-live="polite">Overview</span>
-    <button type="button" class="zoom-in" id="zoomInBtnM" aria-label="Zoom in">+</button>
-    <button type="button" class="zoom-reset" id="zoomResetBtnM" aria-label="Reset zoom to default view">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
-    </button>
-  </div>
   <div class="tape-readout" id="tapeReadout" aria-live="polite">
     <div class="ro-year" id="roYear">—</div>
     <div class="ro-row ro-saec">
@@ -833,7 +883,9 @@
   var reducedMotion = false;
   try { reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (eRM) {}
   var _nowDate = new Date();
-  var nowYear = _nowDate.getFullYear() + ((_nowDate.getMonth() * 30.437 + _nowDate.getDate()) / 365.25);
+  var _yearStartMs = new Date(_nowDate.getFullYear(), 0, 1).getTime();
+  var _yearEndMs = new Date(_nowDate.getFullYear() + 1, 0, 1).getTime();
+  var nowYear = _nowDate.getFullYear() + (_nowDate.getTime() - _yearStartMs) / (_yearEndMs - _yearStartMs);
   if (nowYear < YEAR_START) nowYear = YEAR_START;
   if (nowYear > YEAR_END) nowYear = YEAR_END;
 
@@ -934,41 +986,69 @@
   var events = [
     { label: "Castillon", year: 1453, detail: "Battle of Castillon, 17 July 1453 — effective end of the Hundred Years' War (Grokipedia).", source: "https://grokipedia.com/page/Battle_of_Castillon" },
     { label: "Wars of the Roses", year: 1455, end: 1487, detail: "Dynastic civil wars in England, 1455–1487 (Grokipedia).", source: "https://grokipedia.com/page/Wars_of_the_Roses" },
-    { label: "Bosworth", year: 1485, detail: "Battle of Bosworth Field, 22 August 1485 — Richard III killed; Henry VII begins Tudor rule (Grokipedia).", source: "https://grokipedia.com/page/Wars_of_the_Roses" },
+    { label: "Bosworth", year: 1485, weight: 8, detail: "Battle of Bosworth Field, 22 August 1485 — Richard III killed; Henry VII begins Tudor rule (Grokipedia).", source: "https://grokipedia.com/page/Wars_of_the_Roses" },
+    { label: "Columbus", year: 1492, weight: 8, detail: "Christopher Columbus reaches the Americas, 12 October 1492 (Grokipedia).", source: "https://grokipedia.com/page/Christopher_Columbus" },
     { label: "Cabot voyage", year: 1497, detail: "John Cabot reaches the North American mainland in 1497 for Henry VII (Grokipedia).", source: "https://grokipedia.com/page/John_Cabot" },
+    { label: "Henry VIII", year: 1509, weight: 6, detail: "Henry VIII becomes King of England, 21 April 1509 (Grokipedia).", source: "https://grokipedia.com/page/Henry_VIII" },
     { label: "Reformation", year: 1517, detail: "Martin Luther's Ninety-five Theses, 31 October 1517 — spark of the Protestant Reformation (Grokipedia).", source: "https://grokipedia.com/page/Protestant_Reformation" },
-    { label: "Dissolution", year: 1536, end: 1541, detail: "Dissolution of the monasteries under Henry VIII, 1536–1541 (Grokipedia).", source: "https://grokipedia.com/page/Dissolution_of_the_monasteries" },
+    { label: "Dissolution", year: 1536, end: 1541, weight: 7, detail: "Dissolution of the monasteries under Henry VIII, 1536–1541 (Grokipedia).", source: "https://grokipedia.com/page/Dissolution_of_the_monasteries" },
     { label: "Elizabeth I", year: 1558, detail: "Elizabeth I becomes Queen of England and Ireland, 17 November 1558 (Grokipedia).", source: "https://grokipedia.com/page/Elizabeth_I" },
     { label: "Armada", year: 1588, detail: "Spanish Armada campaign of 1588 against England (Grokipedia).", source: "https://grokipedia.com/page/Spanish_Armada" },
-    { label: "Mayflower", year: 1620, detail: "Mayflower voyage to North America, 1620 (Grokipedia).", source: "https://grokipedia.com/page/Mayflower" },
+    { label: "Jamestown", year: 1607, weight: 8, detail: "Jamestown, the first permanent English settlement in North America, founded 1607 (Grokipedia).", source: "https://grokipedia.com/page/Jamestown,_Virginia" },
+    { label: "Mayflower", year: 1620, weight: 8, detail: "Mayflower voyage to North America, 1620 (Grokipedia).", source: "https://grokipedia.com/page/Mayflower" },
     { label: "English Civil War", year: 1642, end: 1651, detail: "English Civil War, beginning 1642 (Grokipedia).", source: "https://grokipedia.com/page/English_Civil_War" },
     { label: "Restoration", year: 1660, detail: "Stuart Restoration — Charles II restored, 1660 (Grokipedia).", source: "https://grokipedia.com/page/Stuart_Restoration" },
     { label: "Great Fire", year: 1666, detail: "Great Fire of London, 2–6 September 1666 (Grokipedia).", source: "https://grokipedia.com/page/Great_Fire_of_London" },
     { label: "Glorious Revolution", year: 1688, detail: "Glorious Revolution of 1688–1689 — James II overthrown (Grokipedia).", source: "https://grokipedia.com/page/Glorious_Revolution" },
+    { label: "Salem trials", year: 1692, weight: 6, detail: "Salem witch trials, 1692–1693 (Grokipedia).", source: "https://grokipedia.com/page/Salem_witch_trials" },
     { label: "Act of Union", year: 1707, detail: "Acts of Union create the Kingdom of Great Britain, 1707 (Grokipedia).", source: "https://grokipedia.com/page/Treaty_of_Union" },
     { label: "South Sea Bubble", year: 1720, detail: "South Sea Bubble speculative crisis in Great Britain, 1720 (Grokipedia).", source: "https://grokipedia.com/page/the_south_sea_bubble" },
     { label: "Great Awakening", year: 1734, end: 1745, detail: "First Great Awakening Protestant revivals in the British American colonies, 1730s–1740s (Grokipedia).", source: "https://grokipedia.com/page/First_Great_Awakening" },
     { label: "French & Indian War", year: 1754, end: 1763, detail: "French and Indian War, 1754–1763 (Grokipedia).", source: "https://grokipedia.com/page/French_and_Indian_War" },
+    { label: "Stamp Act", year: 1765, weight: 7, detail: "Stamp Act passed by Parliament, 1765 (Grokipedia).", source: "https://grokipedia.com/page/Stamp_Act_1765" },
     { label: "Boston Tea Party", year: 1773, detail: "Boston Tea Party, 16 December 1773 (Grokipedia).", source: "https://grokipedia.com/page/Boston_Tea_Party" },
     { label: "Declaration", year: 1776, detail: "U.S. Declaration of Independence adopted 4 July 1776 (Grokipedia).", source: "https://grokipedia.com/page/United_States_Declaration_of_Independence" },
-    { label: "Louisiana Purchase", year: 1803, detail: "Louisiana Purchase agreement, 1803 (Grokipedia).", source: "https://grokipedia.com/page/Louisiana_Purchase" },
+    { label: "Constitution", year: 1787, weight: 9, detail: "U.S. Constitution signed 17 September 1787 (Grokipedia).", source: "https://grokipedia.com/page/Constitution_of_the_United_States" },
+    { label: "Louisiana Purchase", year: 1803, weight: 7, detail: "Louisiana Purchase agreement, 1803 (Grokipedia).", source: "https://grokipedia.com/page/Louisiana_Purchase" },
+    { label: "War of 1812", year: 1812, end: 1815, weight: 8, detail: "War of 1812 between the United States and Great Britain, 1812–1815 (Grokipedia).", source: "https://grokipedia.com/page/War_of_1812" },
     { label: "Nat Turner", year: 1831, detail: "Nat Turner's Rebellion, Southampton County, Virginia, 21–23 August 1831 (Grokipedia).", source: "https://grokipedia.com/page/Nat_Turner%27s_slave_rebellion" },
+    { label: "Trail of Tears", year: 1838, weight: 8, detail: "Cherokee removal along the Trail of Tears, 1838–1839 (Grokipedia).", source: "https://grokipedia.com/page/Trail_of_Tears" },
     { label: "Mexican–American War", year: 1846, end: 1848, detail: "Mexican–American War, April 1846 – February 1848 (Grokipedia).", source: "https://grokipedia.com/page/Mexican%E2%80%93American_War" },
+    { label: "Seneca Falls", year: 1848, weight: 7, detail: "Seneca Falls Convention, July 1848 (Grokipedia).", source: "https://grokipedia.com/page/Seneca_Falls_Convention" },
     { label: "U.S. Civil War", year: 1861, end: 1865, detail: "American Civil War; Confederacy formed 1861 (Grokipedia).", source: "https://grokipedia.com/page/American_Civil_War" },
+    { label: "Emancipation", year: 1863, weight: 8, detail: "Emancipation Proclamation takes effect 1 January 1863 (Grokipedia).", source: "https://grokipedia.com/page/Emancipation_Proclamation" },
     { label: "Transcontinental RR", year: 1869, detail: "First U.S. transcontinental railroad completed, 1869 (Grokipedia).", source: "https://grokipedia.com/page/Transcontinental_railroad" },
+    { label: "Panic of 1873", year: 1873, weight: 6, detail: "Panic of 1873 financial crisis (Grokipedia).", source: "https://grokipedia.com/page/Panic_of_1873" },
     { label: "Spanish–American War", year: 1898, detail: "Spanish–American War, April–August 1898 (Grokipedia).", source: "https://grokipedia.com/page/Spanish%E2%80%93American_War" },
     { label: "Wright Flyer", year: 1903, detail: "Wright brothers' first powered flight, 17 December 1903 near Kitty Hawk (Grokipedia).", source: "https://grokipedia.com/page/Wright_brothers" },
     { label: "WW1", year: 1914, end: 1918, detail: "World War I, 1914–1918 (Grokipedia).", source: "https://grokipedia.com/page/World_War_I" },
     { label: "Spanish flu", year: 1918, end: 1920, detail: "1918–1920 influenza pandemic (Spanish flu) (Grokipedia).", source: "https://grokipedia.com/page/Spanish_flu" },
+    { label: "Suffrage", year: 1920, weight: 8, detail: "19th Amendment ratified, 18 August 1920 (Grokipedia).", source: "https://grokipedia.com/page/Nineteenth_Amendment_to_the_United_States_Constitution" },
     { label: "1929 Crash", year: 1929, detail: "Wall Street Crash of 1929, late October 1929 (Grokipedia).", source: "https://grokipedia.com/page/Wall_Street_Crash_of_1929" },
+    { label: "New Deal", year: 1933, weight: 8, detail: "Franklin D. Roosevelt's New Deal begins, 1933 (Grokipedia).", source: "https://grokipedia.com/page/New_Deal" },
     { label: "WW2", year: 1939, end: 1945, detail: "World War II, 1 September 1939 – 2 September 1945 (Grokipedia).", source: "https://grokipedia.com/page/World_War_II" },
+    { label: "Korean War", year: 1950, end: 1953, weight: 9, detail: "Korean War, 1950–1953 (Grokipedia).", source: "https://grokipedia.com/page/Korean_War" },
+    { label: "Brown v. Board", year: 1954, weight: 8, detail: "Brown v. Board of Education decided 17 May 1954 (Grokipedia).", source: "https://grokipedia.com/page/Brown_v._Board_of_Education" },
+    { label: "Sputnik", year: 1957, weight: 7, detail: "Sputnik 1, the first artificial satellite, launched 4 October 1957 (Grokipedia).", source: "https://grokipedia.com/page/Sputnik_1" },
+    { label: "Cuban Missile", year: 1962, weight: 8, detail: "Cuban Missile Crisis, October 1962 (Grokipedia).", source: "https://grokipedia.com/page/Cuban_Missile_Crisis" },
     { label: "JFK", year: 1963, detail: "Assassination of John F. Kennedy, 22 November 1963 (Grokipedia).", source: "https://grokipedia.com/page/Assassination_of_John_F._Kennedy" },
-    { label: "Moon landing", year: 1969, detail: "Apollo 11 lunar landing, 20 July 1969 (Grokipedia).", source: "https://grokipedia.com/page/Apollo_11" },
+    { label: "Civil Rights Act", year: 1964, weight: 8, detail: "Civil Rights Act signed 2 July 1964 (Grokipedia).", source: "https://grokipedia.com/page/Civil_Rights_Act_of_1964" },
+    { label: "MLK killed", year: 1968, weight: 8, detail: "Assassination of Martin Luther King Jr., 4 April 1968 (Grokipedia).", source: "https://grokipedia.com/page/Assassination_of_Martin_Luther_King_Jr." },
+    { label: "Moon landing", year: 1969, weight: 8, detail: "Apollo 11 lunar landing, 20 July 1969 (Grokipedia).", source: "https://grokipedia.com/page/Apollo_11" },
     { label: "Oil crisis", year: 1973, detail: "1973 oil crisis; prices roughly quadrupled into 1974 (Grokipedia).", source: "https://grokipedia.com/page/1973_oil_crisis" },
-    { label: "Berlin Wall", year: 1989, detail: "Fall of the Berlin Wall, 9 November 1989 (Grokipedia).", source: "https://grokipedia.com/page/Fall_of_the_Berlin_Wall" },
+    { label: "Vietnam ends", year: 1975, weight: 8, detail: "Fall of Saigon, 30 April 1975, ends the Vietnam War (Grokipedia).", source: "https://grokipedia.com/page/Fall_of_Saigon" },
+    { label: "Iran hostage", year: 1979, weight: 7, detail: "Iran hostage crisis begins 4 November 1979 (Grokipedia).", source: "https://grokipedia.com/page/Iran_hostage_crisis" },
+    { label: "AIDS identified", year: 1981, weight: 7, detail: "AIDS first recognized by U.S. public health officials in 1981 (Grokipedia).", source: "https://grokipedia.com/page/HIV/AIDS" },
+    { label: "Challenger", year: 1986, weight: 6, detail: "Space Shuttle Challenger breaks apart 28 January 1986 (Grokipedia).", source: "https://grokipedia.com/page/Space_Shuttle_Challenger_disaster" },
+    { label: "Berlin Wall", year: 1989, weight: 8, detail: "Fall of the Berlin Wall, 9 November 1989 (Grokipedia).", source: "https://grokipedia.com/page/Fall_of_the_Berlin_Wall" },
     { label: "WWW", year: 1989, detail: "World Wide Web invented by Tim Berners-Lee, 1989 (Grokipedia).", source: "https://grokipedia.com/page/World_Wide_Web" },
+    { label: "Gulf War", year: 1991, weight: 8, detail: "Gulf War, January–February 1991 (Grokipedia).", source: "https://grokipedia.com/page/Gulf_War" },
+    { label: "Oklahoma City", year: 1995, weight: 7, detail: "Oklahoma City bombing, 19 April 1995 (Grokipedia).", source: "https://grokipedia.com/page/Oklahoma_City_bombing" },
     { label: "9/11", year: 2001, detail: "September 11 attacks, 2001 (Grokipedia).", source: "https://grokipedia.com/page/September_11_attacks" },
+    { label: "Iraq War", year: 2003, weight: 8, detail: "Iraq War begins 20 March 2003 (Grokipedia).", source: "https://grokipedia.com/page/Iraq_War" },
+    { label: "Katrina", year: 2005, weight: 7, detail: "Hurricane Katrina makes landfall 29 August 2005 (Grokipedia).", source: "https://grokipedia.com/page/Hurricane_Katrina" },
     { label: "2008 crash", year: 2008, detail: "2008 financial crisis / Great Recession onset (Grokipedia).", source: "https://grokipedia.com/page/Great_Recession" },
+    { label: "Brexit", year: 2016, weight: 7, detail: "United Kingdom votes to leave the European Union, 23 June 2016 (Grokipedia).", source: "https://grokipedia.com/page/Brexit" },
     { label: "Covid", year: 2020, detail: "COVID-19 pandemic; SARS-CoV-2 emerged late 2019, global 2020 (Grokipedia).", source: "https://grokipedia.com/page/COVID-19_pandemic" }
   ];
 
@@ -982,20 +1062,39 @@
   var viewStart = YEAR_START;
   var viewEnd = YEAR_END;
   var BASE_TL_WIDTH = 6200;
+  var MAX_TL_WIDTH = 32000;
 
   function viewSpan() { return Math.max(MIN_SPAN, viewEnd - viewStart); }
+  function yearsOnScreen() {
+    var tw = (timelineEl && timelineEl.offsetWidth) || BASE_TL_WIDTH;
+    var cw = (scroller && scroller.clientWidth) || tw;
+    return viewSpan() * cw / Math.max(1, tw);
+  }
+  function pxPerYear() {
+    return (BASE_TL_WIDTH / FULL_SPAN) * zoomScale;
+  }
   function pct(year) {
     return ((year - viewStart) / viewSpan()) * 100;
   }
   function widthPct(a, b) {
     return ((b - a) / viewSpan()) * 100;
   }
+  function dateToYear(d) {
+    var yr = d.getFullYear();
+    var start = new Date(yr, 0, 1).getTime();
+    var end = new Date(yr + 1, 0, 1).getTime();
+    return yr + (d.getTime() - start) / Math.max(1, end - start);
+  }
+  function yearToDate(y) {
+    var yr = Math.floor(y);
+    var frac = y - yr;
+    if (frac < 0) { yr -= 1; frac += 1; }
+    var start = new Date(yr, 0, 1).getTime();
+    var end = new Date(yr + 1, 0, 1).getTime();
+    return new Date(start + frac * (end - start));
+  }
   function nowYearPrecise() {
-    var d = new Date();
-    // fractional year including time-of-day for minute-level zoom
-    var start = new Date(d.getFullYear(), 0, 0).getTime();
-    var end = new Date(d.getFullYear() + 1, 0, 0).getTime();
-    return d.getFullYear() + (d.getTime() - start) / (end - start);
+    return dateToYear(new Date());
   }
   function esc(s) {
     return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
@@ -1004,7 +1103,7 @@
     return a.charAt(0).toUpperCase() + a.slice(1);
   }
 
-  // Importance: wars/revolutions > political > cultural/tech; baked > live
+  // Importance: wars/revolutions > political > cultural/tech. Live events keep this score.
   function eventWeight(ev) {
     if (ev && ev.weight != null) return ev.weight;
     var s = ((ev && (ev.label || "")) + " " + ((ev && ev.detail) || "")).toLowerCase();
@@ -1013,59 +1112,76 @@
     else if (/declaration|independence|union|reformation|constitution|restoration|glorious/.test(s)) w = 9;
     else if (/election|president|king|queen|dies|death|political|tea party|nat turner/.test(s)) w = 7;
     else if (/moon|wright|www|rail|oil|tech|bubble|awakening/.test(s)) w = 6;
-    if (ev && ev.live) w = Math.min(w, 4);
     return w;
   }
-  function eventKindKey(ev) {
-    var s = ((ev && (ev.label || "")) + " " + ((ev && ev.detail) || "")).toLowerCase();
-    if (/war|invasion|armada|attack|civil/.test(s)) return "war";
-    if (/revolution|reformation|declaration|independence|constitution/.test(s)) return "polity";
-    if (/crash|oil|bubble|recession|depression/.test(s)) return "economy";
-    if (/moon|wright|www|rail|tech/.test(s)) return "tech";
-    if (/covid|flu|pandemic|plague/.test(s)) return "health";
-    if (/awakening|religion|church/.test(s)) return "culture";
-    return "other";
+  // All events sit above the axis, spread through the open band under the turnings.
+  // Same-lane labels need a full label-width; a neighboring lane can sit a little closer.
+  var LANE_SAME_PX = 128;
+  var LANE_SIDE_PX = 86;
+  function eventLanePlan() {
+    var h = (timelineEl && timelineEl.clientHeight) || 0;
+    var eventH = 42;
+    function spread(y0, y1, maxN) {
+      var avail = y1 - y0;
+      if (avail < eventH - 6) return [];
+      var n = Math.min(maxN, Math.max(1, Math.floor(avail / (eventH + 8))));
+      var span = Math.max(0, avail - eventH);
+      var out = [];
+      for (var i = 0; i < n; i++) {
+        var top = n === 1 ? y0 + span / 2 : y0 + span * i / (n - 1);
+        out.push({ top: top, side: "above" });
+      }
+      return out;
+    }
+    if (h < 80) {
+      return [
+        { top: "26%", side: "above" },
+        { top: "34%", side: "above" },
+        { top: "42%", side: "above" }
+      ];
+    }
+    var axisY = h * 0.48;
+    var lanes = spread(h * 0.24, axisY - 6, 3);
+    if (!lanes.length) lanes.push({ top: h * 0.28, side: "above" });
+    return lanes;
   }
-  // Cull overlapping labels by importance; keep type variety; then lane-stagger
-  function cullOverlapping(list) {
-    var span = viewSpan();
-    // min gap in years ≈ 70px at current layout width
-    var cw = (scroller && scroller.clientWidth) || 1200;
-    var tw = (timelineEl && timelineEl.offsetWidth) || cw;
-    var yearsPerPx = span / Math.max(1, tw);
-    var minGap = Math.max(span * 0.012, yearsPerPx * 72);
+  function placeEvents(list) {
+    var lanes = eventLanePlan();
+    var tw = (timelineEl && timelineEl.offsetWidth) || BASE_TL_WIDTH;
+    var ypp = viewSpan() / Math.max(1, tw);
     var sorted = list.slice().sort(function (a, b) {
       var dw = eventWeight(b) - eventWeight(a);
       if (dw) return dw;
       return a.year - b.year;
     });
-    var kept = [];
-    var kindCount = {};
-    sorted.forEach(function (ev) {
-      var clash = kept.some(function (k) { return Math.abs(k.year - ev.year) < minGap; });
-      if (clash) return;
-      var kind = eventKindKey(ev);
-      // soft variety: if many of same kind already, require higher weight
-      if ((kindCount[kind] || 0) >= 3 && eventWeight(ev) < 8) return;
-      kindCount[kind] = (kindCount[kind] || 0) + 1;
-      kept.push(ev);
-    });
-    kept.sort(function (a, b) { return a.year - b.year; });
-    return kept;
-  }
-  function assignLanes(list) {
-    var last = [-1e99, -1e99, -1e99];
-    var minGap = Math.max(viewSpan() * 0.01, 0.5);
-    list.forEach(function (ev) {
-      var best = 0, bestScore = 1e9;
-      for (var L = 0; L < 3; L++) {
-        var gap = ev.year - last[L];
-        var score = gap < minGap ? (minGap - gap) * 10 + L : L;
-        if (score < bestScore) { bestScore = score; best = L; }
+    var placed = [];
+    var laneCount = lanes.map(function () { return 0; });
+    function blocked(ev, laneIndex) {
+      for (var i = 0; i < placed.length; i++) {
+        var p = placed[i];
+        var dist = Math.abs(p.year - ev.year) / ypp;
+        if (p.lane === laneIndex) {
+          if (dist < LANE_SAME_PX) return true;
+        } else if (dist < LANE_SIDE_PX) return true;
       }
+      return false;
+    }
+    sorted.forEach(function (ev) {
+      var best = -1;
+      var bestScore = 1e99;
+      for (var i = 0; i < lanes.length; i++) {
+        if (blocked(ev, i)) continue;
+        if (laneCount[i] < bestScore) { bestScore = laneCount[i]; best = i; }
+      }
+      if (best < 0) return;
       ev.lane = best;
-      last[best] = ev.year;
+      ev.side = lanes[best].side;
+      ev.laneTop = lanes[best].top;
+      laneCount[best] += 1;
+      placed.push(ev);
     });
+    placed.sort(function (a, b) { return a.year - b.year; });
+    return placed;
   }
   var tooltip = document.getElementById("tooltip");
   var scroller = document.getElementById("scroller");
@@ -1081,8 +1197,8 @@
     el.style.left = pct(s.start) + "%";
     el.style.width = widthPct(s.start, s.end) + "%";
     el.style.animationDelay = (0.4 + i * 0.05) + "s";
-    el.innerHTML = '<div class="sname">' + esc(s.name) + '</div><div class="syears">' +
-      s.start + "–" + s.end + (s.projected ? " · proj." : "") + "</div>";
+    el.innerHTML = '<div class="shead"><div class="sname">' + esc(s.name) + '</div><div class="syears">' +
+      s.start + "–" + s.end + (s.projected ? " · proj." : "") + "</div></div>";
     el.dataset.tipTitle = s.name + " saeculum";
     el.dataset.tipBody = (s.projected ? "Projected next saeculum. " : "") +
       "Roughly " + (s.end - s.start) + " years · " + s.start + "–" + s.end + ".";
@@ -1109,14 +1225,14 @@
   // Events
   var eventsEl = document.getElementById("events");
   function renderEvents(list, animate) {
-    var visible = cullOverlapping(list);
-    assignLanes(visible);
+    var visible = placeEvents(list);
     eventsEl.innerHTML = "";
     visible.forEach(function (ev, i) {
       var el = document.createElement("div");
-      el.className = "event lane-" + ev.lane + (ev.live ? " live" : "");
+      el.className = "event " + (ev.side || "above") + (ev.live ? " live" : "");
       el.dataset.year = String(ev.year);
       el.style.left = pct(ev.year) + "%";
+      el.style.top = (typeof ev.laneTop === "number" ? ev.laneTop + "px" : ev.laneTop);
       if (animate !== false && !reducedMotion) el.style.animationDelay = (0.9 + i * 0.03) + "s";
       var yr = ev.end ? (ev.year + "–" + String(ev.end).slice(-2)) : String(ev.year);
       if (ev.end && ev.end - ev.year > 10) yr = ev.year + "–" + ev.end;
@@ -1149,8 +1265,8 @@
     if (nowYear < YEAR_START) nowYear = YEAR_START;
     if (nowYear > YEAR_END) nowYear = YEAR_END;
     nowMarker.style.left = pct(nowYear) + "%";
-    // At fine zoom, slowly scroll the view with real time so "now" drifts live
-    if (advanceView && viewSpan() < 2 / 365.25) {
+    // Coarser zooms step the window. While Now is locked, holdNowCenter keeps the line on the pivot.
+    if (advanceView && !nowPinned && !isFullyZoomed() && viewSpan() < 2 / 365.25) {
       var mid = (viewStart + viewEnd) / 2;
       var drift = nowYear - mid;
       if (Math.abs(drift) > viewSpan() * 0.002) {
@@ -1159,32 +1275,13 @@
         relayoutTimeline(false);
       }
     }
-    var clock = document.getElementById("nowClock");
-    if (!clock) {
-      clock = document.createElement("div");
-      clock.className = "now-clock";
-      clock.id = "nowClock";
-      clock.style.cssText = "position:absolute;left:50%;top:0.85rem;transform:translateX(-50%);font-size:0.5rem;letter-spacing:0.06em;color:rgba(255,255,255,0.7);white-space:nowrap;font-variant-numeric:tabular-nums;";
-      nowMarker.appendChild(clock);
-    }
-    if (viewSpan() < 3 / 365.25) {
-      var d = new Date();
-      clock.textContent = d.toISOString().slice(0, 19).replace("T", " ");
-      clock.style.display = "";
-    } else {
-      clock.style.display = "none";
-    }
   }
 
   var ticksEl = document.getElementById("ticks");
   function formatTickLabel(y, span) {
     if (span > 80) return String(Math.round(y));
     if (span > 2) return String(Math.round(y * 10) / 10);
-    // sub-year: build a date from fractional year
-    var yr = Math.floor(y);
-    var frac = y - yr;
-    var ms = Date.UTC(yr, 0, 1) + frac * (Date.UTC(yr + 1, 0, 1) - Date.UTC(yr, 0, 1));
-    var d = new Date(ms);
+    var d = yearToDate(y);
     if (span > 60 / 365.25) {
       return d.toLocaleString(undefined, { month: "short", year: "numeric" });
     }
@@ -1207,24 +1304,139 @@
     if (span > 30 / 365.25) return 7 / 365.25; // week
     if (span > 3 / 365.25) return 1 / 365.25; // day
     if (span > 6 / (365.25 * 24)) return 1 / (365.25 * 24); // hour
-    if (span > 30 / (365.25 * 24 * 60)) return 10 / (365.25 * 24 * 60); // 10 min
-    return 1 / (365.25 * 24 * 60); // 1 min
+    if (span > 2 / (365.25 * 24 * 60)) return 1 / (365.25 * 24 * 60); // minute
+    if (span > 20 / (365.25 * 24 * 3600)) return 5 / (365.25 * 24 * 3600); // 5 seconds
+    return 1 / (365.25 * 24 * 3600); // 1 second
+  }
+  var tickRaf = 0;
+  var ticksNeedIntro = true;
+  function scheduleRebuildTicks() {
+    if (tickRaf) return;
+    tickRaf = requestAnimationFrame(function () {
+      tickRaf = 0;
+      rebuildTicks();
+    });
+  }
+  function appendTick(y, label) {
+    var el = document.createElement("div");
+    el.className = ticksNeedIntro ? "tick visible" : "tick";
+    el.style.left = pct(y) + "%";
+    el.style.opacity = "1";
+    var text = "";
+    if (label && typeof label === "object") {
+      text = '<div class="yr"><div>' + esc(label.top) + '</div><div class="sub">' + esc(label.sub) + "</div></div>";
+    } else if (label) {
+      text = '<div class="yr">' + esc(label) + "</div>";
+    }
+    el.innerHTML = '<div class="stem"></div>' + text;
+    ticksEl.appendChild(el);
+  }
+  function calendarTicks(y0, y1, screen) {
+    var from = yearToDate(y0);
+    var to = yearToDate(y1);
+    var guard = 0;
+    var lastPx = -1e9;
+    var tw = (timelineEl && timelineEl.offsetWidth) || 1;
+    function emit(d, label) {
+      var y = dateToYear(d);
+      if (y < viewStart - 1e-4 || y > viewEnd + 1e-4) return;
+      var px = ((y - viewStart) / viewSpan()) * tw;
+      var show = !label || px - lastPx >= 52;
+      if (show && label) lastPx = px;
+      appendTick(y, show ? label : "");
+    }
+    if (screen > 0.5) {
+      var month = new Date(from.getFullYear(), from.getMonth(), 1);
+      if (month < from) month = new Date(month.getFullYear(), month.getMonth() + 1, 1);
+      while (month <= to && guard++ < 48) {
+        emit(month, month.toLocaleString(undefined, { month: "short", year: "numeric" }));
+        month = new Date(month.getFullYear(), month.getMonth() + 1, 1);
+      }
+      return;
+    }
+    if (screen > 30 / 365.25) {
+      var week = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+      week.setDate(week.getDate() - ((week.getDay() + 6) % 7));
+      var prevYear = -1;
+      while (week <= to && guard++ < 60) {
+        var opts = { month: "short", day: "numeric" };
+        if (week.getFullYear() !== prevYear) opts.year = "numeric";
+        prevYear = week.getFullYear();
+        emit(week, week.toLocaleString(undefined, opts));
+        week = new Date(week.getFullYear(), week.getMonth(), week.getDate() + 7);
+      }
+      return;
+    }
+    if (screen > 3 / 365.25) {
+      var day = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+      while (day <= to && guard++ < 50) {
+        emit(day, day.toLocaleString(undefined, { month: "short", day: "numeric" }));
+        day = new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1);
+      }
+      return;
+    }
+    if (screen > 6 / (365.25 * 24)) {
+      var hour = new Date(from.getFullYear(), from.getMonth(), from.getDate(), from.getHours(), 0, 0, 0);
+      if (hour < from) hour = new Date(hour.getTime() + 3600000);
+      while (hour <= to && guard++ < 48) {
+        emit(hour, hour.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit" }));
+        hour = new Date(hour.getTime() + 3600000);
+      }
+      return;
+    }
+    if (screen > 2 / (365.25 * 24 * 60)) {
+      var mins = screen > 30 / (365.25 * 24 * 60) ? 10 : 1;
+      var minute = new Date(from.getTime());
+      minute.setSeconds(0, 0);
+      minute.setMinutes(Math.floor(minute.getMinutes() / mins) * mins);
+      if (minute < from) minute = new Date(minute.getTime() + mins * 60000);
+      while (minute <= to && guard++ < 48) {
+        emit(minute, minute.toLocaleString(undefined, { hour: "2-digit", minute: "2-digit" }));
+        minute = new Date(minute.getTime() + mins * 60000);
+      }
+      return;
+    }
+    var secStep = screen > 20 / (365.25 * 24 * 3600) ? 5 : 1;
+    var second = new Date(from.getTime());
+    second.setMilliseconds(0);
+    second.setSeconds(Math.floor(second.getSeconds() / secStep) * secStep);
+    if (second < from) second = new Date(second.getTime() + secStep * 1000);
+    while (second <= to && guard++ < 120) {
+      var hhmm = second.toLocaleString(undefined, { hour: "2-digit", minute: "2-digit" });
+      var ss = String(second.getSeconds()).padStart(2, "0");
+      emit(second, { top: hhmm, sub: ss });
+      second = new Date(second.getTime() + secStep * 1000);
+    }
   }
   function rebuildTicks() {
-    var span = viewSpan();
-    var step = tickStep(span);
+    var tw = (timelineEl && timelineEl.offsetWidth) || BASE_TL_WIDTH;
+    var cw = (scroller && scroller.clientWidth) || tw;
+    var sl = (scroller && scroller.scrollLeft) || 0;
+    var spanAll = viewSpan();
+    var yVis0 = viewStart + (Math.max(0, sl) / Math.max(1, tw)) * spanAll;
+    var yVis1 = viewStart + ((sl + cw) / Math.max(1, tw)) * spanAll;
+    var screen = Math.max(1e-9, yVis1 - yVis0);
+    var step = tickStep(screen);
+    var pad = Math.max(step * 2, screen * 0.35);
+    var y0 = yVis0 - pad;
+    var y1 = yVis1 + pad;
     ticksEl.innerHTML = "";
-    var start = Math.floor(viewStart / step) * step;
-    var i = 0;
-    for (var y = start; y <= viewEnd + step * 0.01 && i < 80; y += step, i++) {
-      if (y < viewStart - step * 0.01) continue;
-      var el = document.createElement("div");
-      el.className = "tick visible";
-      el.style.left = pct(y) + "%";
-      el.style.opacity = "1";
-      el.innerHTML = '<div class="stem"></div><div class="yr">' + esc(formatTickLabel(y, span)) + "</div>";
-      ticksEl.appendChild(el);
+    if (step < 0.2) {
+      calendarTicks(y0, y1, screen);
+    } else {
+      var start = Math.floor(y0 / step) * step;
+      var lastPx = -1e9;
+      for (var i = 0; i < 80; i++) {
+        var y = start + i * step;
+        if (y > y1 + step * 0.01) break;
+        if (y < viewStart - step || y > viewEnd + step) continue;
+        var px = ((y - viewStart) / spanAll) * tw;
+        var show = px - lastPx >= 52;
+        if (show) lastPx = px;
+        appendTick(y, show ? formatTickLabel(y, screen) : "");
+      }
     }
+    ticksNeedIntro = false;
   }
   rebuildTicks();
 
@@ -1245,9 +1457,9 @@
     return "elder";
   }
 
-  // Continuous life-stage bands (S&H ~22y): each generation fills childhood, then
-  // young adult, then midlife, then elder with no gaps along the diagonal.
-  // Band for stage [age0, age1) runs from firstBorn+age0 through lastBorn+age1.
+  // One generation per life-stage row at a time. The bar is that cohort's birth
+  // span, shifted to the age the stage begins. Extending it to lastBorn+stageEnd
+  // made each bar ~22 years longer and painted it over the next generation.
   var STAGE_BANDS = [
     { stage: "child", age0: 0, age1: 22, label: "childhood" },
     { stage: "young", age0: 22, age1: 44, label: "young adult" },
@@ -1255,12 +1467,18 @@
     { stage: "elder", age0: 66, age1: 88, label: "elderhood" }
   ];
   var chipIdx = 0;
-  generations.forEach(function (g) {
+  generations.forEach(function (g, gi) {
     var midBirth = (g.start + g.end) / 2;
+    var next = generations[gi + 1];
+    var spanEnd = g.end;
+    if (next && next.start - g.end <= 2) spanEnd = next.start;
     STAGE_BANDS.forEach(function (sy) {
       var y0 = g.start + sy.age0;
-      var y1 = g.end + sy.age1;
-      if (y1 < YEAR_START - 2 || y0 > YEAR_END + 2) return;
+      var y1 = spanEnd + sy.age0;
+      if (y1 <= y0) return;
+      if (y1 < YEAR_START || y0 > YEAR_END) return;
+      if (y0 < YEAR_START) y0 = YEAR_START;
+      if (y1 > YEAR_END) y1 = YEAR_END;
       var row = stagesEl.querySelector('[data-stage="' + sy.stage + '"]');
       if (!row) return;
       var chip = document.createElement("div");
@@ -1270,34 +1488,17 @@
       chip.style.left = pct(y0) + "%";
       chip.style.width = Math.max(widthPct(y0, y1), 0.15) + "%";
       chip.style.animationDelay = (1.05 + chipIdx * 0.01) + "s";
-      chip.innerHTML = "<span>" + esc(g.short) + '</span><span class="garch">' + esc(archTitle(g.arch)) + "</span>";
+      chip.innerHTML = '<div class="band"></div><div class="label"><div class="name">' +
+        esc(g.short) + '</div><div class="dates">' + g.start + "–" + g.end + "</div></div>";
       chip.dataset.tipTitle = g.name + " · " + archTitle(g.arch) + " · " + sy.label;
-      chip.dataset.tipBody = "Born " + g.start + "–" + g.end + ". In " + sy.label +
-        " roughly " + Math.round(midBirth + sy.age0) + "–" + Math.round(midBirth + sy.age1) +
-        " (band " + Math.round(y0) + "–" + Math.round(y1) + "). " + ARCH_COPY[g.arch];
+      chip.dataset.tipBody = "Born " + g.start + "–" + g.end + ". This cohort occupies " +
+        sy.label + " from " + Math.round(y0) + "–" + Math.round(y1) +
+        " (oldest enters " + Math.round(g.start + sy.age0) + ", youngest leaves " +
+        Math.round(g.end + sy.age1) + "). " + ARCH_COPY[g.arch];
       row.appendChild(chip);
       setTimeout(function () { chip.classList.add("enter"); }, 1050 + chipIdx * 10);
       chipIdx++;
     });
-  });
-
-  // Birth-span strip
-  var birthEl = document.getElementById("gensBirth");
-  generations.forEach(function (g, i) {
-    var el = document.createElement("div");
-    el.className = "gbirth " + g.arch + (g.projected ? " projected" : "");
-    el.dataset.y0 = String(g.start); el.dataset.y1 = String(g.end);
-    el.style.left = pct(g.start) + "%";
-    el.style.width = Math.max(widthPct(g.start, g.end), 0.4) + "%";
-    el.style.animationDelay = (1.5 + i * 0.02) + "s";
-    // vertical stagger slight for dense early gens
-    if (i % 2 === 1) el.style.top = "1.1rem";
-    el.innerHTML = '<div class="gn">' + esc(g.short) + " · " + esc(archTitle(g.arch)) +
-      '</div><div class="gy">' + g.start + "–" + g.end + "</div>";
-    el.dataset.tipTitle = g.name;
-    el.dataset.tipBody = "Birth years " + g.start + "–" + g.end + " · " + archTitle(g.arch) + " archetype. " + ARCH_COPY[g.arch];
-    birthEl.appendChild(el);
-    setTimeout(function () { el.classList.add("enter"); }, 1500 + i * 20);
   });
 
   // Tooltips desktop
@@ -1349,7 +1550,7 @@
   }
 
   function zoomLabelText() {
-    var span = viewSpan();
+    var span = yearsOnScreen();
     if (span > 400) return "Overview";
     if (span > 80) return "Centuries";
     if (span > 20) return "Decades";
@@ -1367,26 +1568,195 @@
     if (a) a.textContent = label;
     if (b) b.textContent = label;
   }
-  function relayoutTimeline(animateEvents) {
+  var stageKeyClearRaf = 0;
+  function yearToScreenX(year) {
+    var tr = timelineEl.getBoundingClientRect();
+    var tw = timelineEl.offsetWidth || 1;
+    return tr.left + ((year - viewStart) / viewSpan()) * tw;
+  }
+
+  // When the latest cohort in a row has ended and the next has not reached the
+  // view, pin that cohort to the left edge so the row does not go blank.
+  function stickLastCohort() {
+    var tw = timelineEl.offsetWidth || 1;
+    var cw = scroller.clientWidth || tw;
+    var sl = Math.max(0, scroller.scrollLeft || 0);
     var span = viewSpan();
-    var cw = scroller.clientWidth || 1200;
-    var ideal = BASE_TL_WIDTH * (FULL_SPAN / span);
-    var newW = ideal > cw * 2.5 ? cw : Math.max(cw, Math.min(ideal, cw * 2.5));
-    timelineEl.style.width = newW + "px";
-    zoomScale = FULL_SPAN / span;
-    function place(el) {
-      if (!el.dataset.y0) return;
-      var y0 = Number(el.dataset.y0), y1 = Number(el.dataset.y1);
-      el.style.left = pct(y0) + "%";
-      if (el.dataset.y1) el.style.width = Math.max(widthPct(y0, y1), 0.05) + "%";
+    var yEdge = viewStart + (sl / Math.max(1, tw)) * span;
+    var visLeft = Math.max(0, Math.min(sl, tw));
+    var visRight = Math.max(visLeft, Math.min(tw, sl + cw));
+    function restore(el) {
+      el.classList.remove("sticks-open");
+      var y0 = Number(el.dataset.y0);
+      var y1 = Number(el.dataset.y1);
+      var left = ((y0 - viewStart) / span) * tw;
+      var right = ((y1 - viewStart) / span) * tw;
+      if (!(right > left) || right <= 0 || left >= tw) {
+        el.style.visibility = "hidden";
+        el.classList.remove("continues-left");
+        return;
+      }
+      el.style.visibility = "";
+      var continues = left < -0.5;
+      el.style.left = (continues ? 0 : left) + "px";
+      el.style.width = Math.max(1, Math.min(right, tw) - (continues ? 0 : left)) + "px";
+      el.classList.toggle("continues-left", continues);
     }
-    saecEl.querySelectorAll(".saeculum").forEach(place);
-    turningsEl.querySelectorAll(".turning").forEach(place);
-    stagesEl.querySelectorAll(".gen-chip").forEach(place);
-    var birthRoot = document.getElementById("gensBirth");
-    if (birthRoot) birthRoot.querySelectorAll(".gbirth").forEach(place);
+    stagesEl.querySelectorAll(".stage-row").forEach(function (row) {
+      var chips = Array.prototype.slice.call(row.querySelectorAll(".gen-chip"));
+      chips.sort(function (a, b) { return Number(a.dataset.y0) - Number(b.dataset.y0); });
+      chips.forEach(restore);
+      var owner = null;
+      var next = null;
+      for (var i = 0; i < chips.length; i++) {
+        var cy0 = Number(chips[i].dataset.y0);
+        var cy1 = Number(chips[i].dataset.y1);
+        if (cy0 > yEdge) break;
+        owner = chips[i];
+        next = chips[i + 1] || null;
+        if (cy0 <= yEdge && cy1 > yEdge) break;
+      }
+      if (!owner) return;
+      var left = ((Number(owner.dataset.y0) - viewStart) / span) * tw;
+      var right = ((Number(owner.dataset.y1) - viewStart) / span) * tw;
+      var shown = Math.min(right, visRight) - Math.max(left, visLeft);
+      if (shown >= 96 && right > visLeft + 96) return;
+      if (left >= visLeft) return;
+      if (next) {
+        var nextLeft = ((Number(next.dataset.y0) - viewStart) / span) * tw;
+        if (nextLeft < visRight - 24 && nextLeft > visLeft) return;
+      }
+      var stubR = Math.min(visRight, visLeft + 220);
+      if (next) {
+        var nLeft = ((Number(next.dataset.y0) - viewStart) / span) * tw;
+        if (nLeft > visLeft && nLeft < stubR) stubR = nLeft;
+      }
+      if (stubR - visLeft < 48) return;
+      owner.style.visibility = "";
+      owner.style.left = visLeft + "px";
+      owner.style.width = (stubR - visLeft) + "px";
+      owner.classList.add("continues-left", "sticks-open");
+    });
+  }
+
+  function stickSectionLabels() {
+    if (!scroller || !timelineEl) return;
+    stickLastCohort();
+    var sr = scroller.getBoundingClientRect();
+    var titleEl = document.querySelector(".brand h1");
+    var titleLeft = titleEl ? titleEl.getBoundingClientRect().left : sr.left + 40;
+    function place(el, label, minW, floorLeft, pinLeft) {
+      if (!label) return;
+      label.style.position = "absolute";
+      label.style.top = "";
+      label.style.right = "";
+      label.style.zIndex = "";
+      if (el.classList.contains("sticks-open")) {
+        var boxLeft = parseFloat(el.style.left);
+        var boxW = parseFloat(el.style.width);
+        var boxScreen = timelineEl.getBoundingClientRect().left + (isFinite(boxLeft) ? boxLeft : 0);
+        var inset = 8;
+        var edge = pinLeft != null ? pinLeft : sr.left + inset;
+        var start = Math.max(boxScreen + inset, edge);
+        var end = boxScreen + (isFinite(boxW) ? boxW : 0) - 6;
+        if (end - start < minW) {
+          label.style.visibility = "hidden";
+          label.style.left = "";
+          label.style.maxWidth = "";
+          return;
+        }
+        label.style.visibility = "";
+        label.style.left = Math.max(0, start - boxScreen) + "px";
+        label.style.maxWidth = Math.max(minW, end - start) + "px";
+        return;
+      }
+      if (el.style.visibility === "hidden") {
+        label.style.visibility = "hidden";
+        return;
+      }
+      var y0 = Number(el.dataset.y0);
+      var y1 = Number(el.dataset.y1);
+      if (!isFinite(y0) || !isFinite(y1)) return;
+      var x0 = yearToScreenX(y0);
+      var x1 = yearToScreenX(y1);
+      var leftPx = parseFloat(el.style.left);
+      var boxScreen = el.style.left.indexOf("%") === -1 && isFinite(leftPx)
+        ? timelineEl.getBoundingClientRect().left + leftPx
+        : x0;
+      var inset = 8;
+      var edge = pinLeft != null ? pinLeft : sr.left + inset;
+      var start = x0 + inset;
+      if (floorLeft != null) start = Math.max(start, floorLeft);
+      if (start < edge) start = Math.max(x0 + inset, edge);
+      var end = Math.min(x1 - 6, sr.right - 4);
+      var room = end - start;
+      if (room < minW || x1 < sr.left + minW || x0 > sr.right - 8) {
+        label.style.visibility = "hidden";
+        label.style.left = "";
+        label.style.maxWidth = "";
+        return;
+      }
+      var border = pinLeft != null ? (parseFloat(getComputedStyle(el).borderLeftWidth) || 0) : 0;
+      label.style.visibility = "";
+      label.style.left = Math.max(0, start - boxScreen - border) + "px";
+      label.style.maxWidth = Math.max(minW, room) + "px";
+    }
+    saecEl.querySelectorAll(".saeculum").forEach(function (el) {
+      place(el, el.querySelector(".shead"), 36, null, titleLeft);
+    });
+    turningsEl.querySelectorAll(".turning").forEach(function (el) {
+      place(el, el.querySelector(".label"), 32, null, titleLeft);
+    });
+    stagesEl.querySelectorAll(".stage-row").forEach(function (row) {
+      row.querySelectorAll(".gen-chip").forEach(function (el) {
+        place(el, el.querySelector(".label"), 28, null, titleLeft);
+      });
+    });
+  }
+  function scheduleClearStageKey() {
+    if (stageKeyClearRaf) return;
+    stageKeyClearRaf = requestAnimationFrame(function () {
+      stageKeyClearRaf = 0;
+      stickSectionLabels();
+    });
+  }
+
+  function fitOverflowText() {
+    stickSectionLabels();
+  }
+
+  function relayoutTimeline(animateEvents, opts) {
+    var lite = opts && opts.lite;
+    var newW = Math.max(scroller.clientWidth || 0, viewSpan() * pxPerYear());
+    if (newW > MAX_TL_WIDTH) newW = MAX_TL_WIDTH;
+    timelineEl.style.width = newW + "px";
+    function placeSection(el) {
+      if (!el.dataset.y0) return;
+      var y0 = Number(el.dataset.y0);
+      var y1 = el.dataset.y1 != null ? Number(el.dataset.y1) : y0;
+      var span = viewSpan();
+      var left = ((y0 - viewStart) / span) * newW;
+      var right = ((y1 - viewStart) / span) * newW;
+      if (!(right > left) || right <= 0 || left >= newW) {
+        el.style.visibility = "hidden";
+        el.classList.remove("continues-left");
+        return;
+      }
+      el.style.visibility = "";
+      var continues = left < -0.5;
+      var drawL = continues ? 0 : left;
+      var drawR = Math.min(right, newW);
+      el.style.left = drawL + "px";
+      el.style.width = Math.max(1, drawR - drawL) + "px";
+      el.classList.toggle("continues-left", continues);
+    }
+    saecEl.querySelectorAll(".saeculum").forEach(placeSection);
+    turningsEl.querySelectorAll(".turning").forEach(placeSection);
+    stagesEl.querySelectorAll(".gen-chip").forEach(placeSection);
     rebuildTicks();
     updateNowMarker(false);
+    stickSectionLabels();
+    if (lite) return;
     // Re-render events (baked + live) with cull for this zoom
     var combined = events.slice();
     liveEvents.forEach(function (ev) {
@@ -1401,37 +1771,350 @@
     renderEvents(inView, animateEvents === true);
     updateTurningFall();
     updateZoomChrome();
+    fitOverflowText();
     scheduleLiveFetch();
   }
 
-  function applyTimelineZoom(newScale, anchorClientX) {
-    // newScale: FULL_SPAN/span ratio (1 = overview). Allow up to minute-level.
-    var maxScale = FULL_SPAN / MIN_SPAN;
-    newScale = Math.max(1, Math.min(maxScale, newScale));
-    var rect = scroller.getBoundingClientRect();
-    var anchorX = anchorClientX != null ? anchorClientX : (rect.left + rect.width / 2);
-    var year = yearAtClientX(anchorX);
-    var span = FULL_SPAN / newScale;
-    var frac = (year - viewStart) / viewSpan();
-    if (!(frac >= 0 && frac <= 1)) frac = 0.5;
-    viewStart = year - frac * span;
-    viewEnd = viewStart + span;
-    // Keep window inside chronicle when near overview; allow fine zoom around now freely
-    if (span > 30) {
-      if (viewStart < YEAR_START) { viewEnd += YEAR_START - viewStart; viewStart = YEAR_START; }
-      if (viewEnd > YEAR_END) { viewStart -= viewEnd - YEAR_END; viewEnd = YEAR_END; }
+  function scrollerPadLeft() {
+    return parseFloat(getComputedStyle(scroller).paddingLeft) || 0;
+  }
+
+  function pivotLocalX() {
+    return (scroller.clientWidth || 0) / 2;
+  }
+
+  function nowOffsetX() {
+    var sr = scroller.getBoundingClientRect();
+    var r = nowMarker.getBoundingClientRect();
+    return (r.left + r.width / 2) - sr.left;
+  }
+
+  function yearAtLocalX(localX) {
+    var tw = timelineEl.offsetWidth || 1;
+    var contentX = scroller.scrollLeft + localX - scrollerPadLeft();
+    return viewStart + (contentX / Math.max(1, tw)) * viewSpan();
+  }
+
+  function pinYear(year, localX) {
+    var tw = timelineEl.offsetWidth || 1;
+    var contentX = ((year - viewStart) / viewSpan()) * tw;
+    var next = contentX + scrollerPadLeft() - localX;
+    var max = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+    if (next < 0) next = 0;
+    if (next > max) next = max;
+    scrollLock = true;
+    noteProgScroll(next);
+    scroller.scrollLeft = next;
+    scrollLock = false;
+    rebuildTicks();
+    stickSectionLabels();
+  }
+
+  // Choose the year window for the current zoom so Now can stay at localX
+  // and both ends of the chronicle stay reachable by scrolling.
+  function fitViewAround(year, localX) {
+    var px = pxPerYear();
+    var cw = Math.max(1, scroller.clientWidth || 1200);
+    var fullW = (YEAR_END - YEAR_START) * px;
+    if (fullW <= MAX_TL_WIDTH) {
+      viewStart = YEAR_START;
+      viewEnd = YEAR_END;
+      return;
+    }
+    var width = MAX_TL_WIDTH;
+    var spanShown = width / px;
+    var maxScroll = Math.max(0, width - cw);
+    var pxBefore = Math.max(0, (year - YEAR_START) * px);
+    var pxAfter = Math.max(0, (YEAR_END - year) * px);
+    var lo = Math.max(0, width - pxAfter);
+    var hi = Math.min(width, pxBefore);
+    var origin = localX - scrollerPadLeft();
+    var pinLo = Math.max(lo, origin);
+    var pinHi = Math.min(hi, origin + maxScroll);
+    var contentX;
+    if (pinLo <= pinHi) {
+      contentX = Math.max(pinLo, Math.min(pinHi, origin + maxScroll / 2));
+    } else {
+      contentX = Math.max(lo, Math.min(hi, origin));
+    }
+    viewStart = year - contentX / px;
+    viewEnd = viewStart + spanShown;
+    if (viewStart < YEAR_START) {
+      viewEnd -= YEAR_START - viewStart;
+      viewStart = YEAR_START;
+    }
+    if (viewEnd > YEAR_END) {
+      viewStart -= viewEnd - YEAR_END;
+      viewEnd = YEAR_END;
       if (viewStart < YEAR_START) viewStart = YEAR_START;
     }
+  }
+
+  var nowPinned = false;
+  var userScrollAt = 0;
+  var snapTimer = 0;
+  var snapping = false;
+  var progScroll = null;
+  var pinBreak = 0;
+  var pinBreakTimer = 0;
+  var suppressSnapUntil = 0;
+  var SNAP_PX = 64;
+
+  function noteProgScroll(x) {
+    progScroll = x;
+  }
+
+  function isFullyZoomed() {
+    return yearsOnScreen() <= 2 / (365.25 * 24);
+  }
+
+  function nowCenterDelta() {
+    return nowOffsetX() - pivotLocalX();
+  }
+
+  function lockNowCenter() {
+    nowYear = nowYearPrecise();
+    if (nowYear < YEAR_START) nowYear = YEAR_START;
+    if (nowYear > YEAR_END) nowYear = YEAR_END;
+    var localX = pivotLocalX();
+    var tw = timelineEl.offsetWidth || 1;
+    var contentX = ((nowYear - viewStart) / viewSpan()) * tw;
+    var next = contentX + scrollerPadLeft() - localX;
+    var max = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+    if (next < -1 || next > max + 1) {
+      fitViewAround(nowYear, localX);
+      relayoutTimeline(false);
+    }
+    pinYear(nowYear, localX);
+    nowPinned = true;
+    pinBreak = 0;
+    updateNowJump();
+    stickSectionLabels();
+    wakeLiveNow();
+  }
+
+  function snapNowToCenter() {
+    if (easeRaf || snapping) return;
+    nowYear = nowYearPrecise();
+    if (nowYear < YEAR_START) nowYear = YEAR_START;
+    if (nowYear > YEAR_END) nowYear = YEAR_END;
+    var localX = pivotLocalX();
+    var tw = timelineEl.offsetWidth || 1;
+    var contentX = ((nowYear - viewStart) / viewSpan()) * tw;
+    var dest = contentX + scrollerPadLeft() - localX;
+    var max = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+    var start = scroller.scrollLeft;
+    if (dest < 0 || dest > max || reducedMotion || Math.abs(dest - start) < 2) {
+      lockNowCenter();
+      return;
+    }
+    snapping = true;
+    var t0 = performance.now();
+    function frame(now) {
+      var p = Math.min(1, (now - t0) / 160);
+      var e = 1 - Math.pow(1 - p, 3);
+      var next = start + (dest - start) * e;
+      scrollLock = true;
+      noteProgScroll(next);
+      scroller.scrollLeft = next;
+      scrollLock = false;
+      if (p < 1) requestAnimationFrame(frame);
+      else {
+        snapping = false;
+        lockNowCenter();
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function considerSnapNow() {
+    if (!introDone || easeRaf || snapping || nowPinned) return;
+    if (performance.now() < suppressSnapUntil) return;
+    userScrollAt = performance.now();
+    if (snapTimer) clearTimeout(snapTimer);
+    snapTimer = setTimeout(function () {
+      snapTimer = null;
+      if (!introDone || easeRaf || snapping || scrollLock || nowPinned) return;
+      if (performance.now() < suppressSnapUntil) return;
+      if (Math.abs(nowCenterDelta()) <= SNAP_PX) snapNowToCenter();
+    }, 120);
+  }
+
+  // Keep the Now line on the pivot. Sets scroll to the exact center each frame
+  // so the line does not lag behind the clock.
+  function holdNowCenter() {
+    if (!nowPinned || easeRaf || snapping) return;
+    nowYear = nowYearPrecise();
+    if (nowYear < YEAR_START) nowYear = YEAR_START;
+    if (nowYear > YEAR_END) nowYear = YEAR_END;
+    var localX = pivotLocalX();
+    var tw = timelineEl.offsetWidth || 1;
+    var contentX = ((nowYear - viewStart) / viewSpan()) * tw;
+    var dest = contentX + scrollerPadLeft() - localX;
+    var max = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+    if (dest < -0.5 || dest > max + 0.5) {
+      var shift = nowYear - yearAtLocalX(localX);
+      if (Math.abs(shift) < 1e-12) return;
+      viewStart += shift;
+      viewEnd += shift;
+      scrollLock = true;
+      relayoutTimeline(false, { lite: true });
+      pinYear(nowYear, localX);
+      scrollLock = false;
+      return;
+    }
+    dest = Math.max(0, Math.min(max, dest));
+    nowMarker.style.left = pct(nowYear) + "%";
+    if (Math.abs(dest - scroller.scrollLeft) < 0.35) return;
+    scrollLock = true;
+    noteProgScroll(dest);
+    scroller.scrollLeft = dest;
+    scrollLock = false;
+  }
+
+  function smoothNowFrame() {
+    nowYear = nowYearPrecise();
+    if (nowYear < YEAR_START) nowYear = YEAR_START;
+    if (nowYear > YEAR_END) nowYear = YEAR_END;
+    nowMarker.style.left = pct(nowYear) + "%";
+    if (nowPinned) holdNowCenter();
+  }
+
+  function applyTimelineZoom(newScale) {
+    stopEaseToNow();
+    var maxScale = FULL_SPAN / MIN_SPAN;
+    newScale = Math.max(1, Math.min(maxScale, newScale));
+    if (nowPinned) {
+      nowYear = nowYearPrecise();
+      if (nowYear < YEAR_START) nowYear = YEAR_START;
+      if (nowYear > YEAR_END) nowYear = YEAR_END;
+    }
+    var localX = pivotLocalX();
+    var year = nowPinned ? nowYear : yearAtLocalX(localX);
+    cohortFramed = false;
     zoomScale = newScale;
+    fitViewAround(year, localX);
     relayoutTimeline(false);
-    // Keep anchor year under cursor
-    var tw = timelineEl.offsetWidth || BASE_TL_WIDTH;
-    var newScroll = ((year - viewStart) / viewSpan()) * tw - (anchorX - rect.left);
-    var max = Math.max(0, tw - scroller.clientWidth);
-    if (newScroll < 0) newScroll = 0;
-    if (newScroll > max) newScroll = max;
-    scroller.scrollLeft = newScroll;
+    pinYear(nowPinned ? nowYear : year, localX);
+    updateNowJump();
     if (scroller.scrollLeft > 40) scrollHint.classList.add("hidden");
+    wakeLiveNow();
+  }
+
+  // Default frame: Boomers' first birth year on the left, Gen Z's last on the right.
+  function cohortWindow() {
+    var start = 1943;
+    var end = 2025;
+    for (var i = 0; i < generations.length; i++) {
+      if (generations[i].short === "Boomers") start = generations[i].start;
+      if (generations[i].short === "Gen Z") end = generations[i].end;
+    }
+    return { start: start, end: end };
+  }
+
+  var cohortFramed = false;
+
+  function applyCohortZoom() {
+    var win = cohortWindow();
+    var cw = scroller.clientWidth;
+    if (cw < 2) return null;
+    var span = Math.max(1, win.end - win.start);
+    var zoom = (cw / span) * FULL_SPAN / BASE_TL_WIDTH;
+    zoomScale = Math.max(1, Math.min(FULL_SPAN / MIN_SPAN, zoom));
+    nowYear = nowYearPrecise();
+    if (nowYear < YEAR_START) nowYear = YEAR_START;
+    if (nowYear > YEAR_END) nowYear = YEAR_END;
+    fitViewAround(nowYear, pivotLocalX());
+    relayoutTimeline(false);
+    return win;
+  }
+
+  function frameCurrentGenerations() {
+    var win = applyCohortZoom();
+    if (!win) return null;
+    lockNowCenter();
+    cohortFramed = true;
+    return win;
+  }
+
+  function resetViewToNow() {
+    stopEaseToNow();
+    noteZoomInput();
+    frameCurrentGenerations();
+    clearLiveEvents();
+    scrollHint.classList.add("hidden");
+  }
+
+  var easeRaf = 0;
+  var introDone = false;
+  var easeScrollTarget = null;
+
+  function stopEaseToNow() {
+    easeScrollTarget = null;
+    if (easeRaf) { cancelAnimationFrame(easeRaf); easeRaf = 0; }
+  }
+
+  function updateNowJump() {
+    var btn = document.getElementById("nowJump");
+    var pivot = document.getElementById("pivotLine");
+    var sr = scroller.getBoundingClientRect();
+    var nr = nowMarker.getBoundingClientRect();
+    var nowMid = nr.left + nr.width / 2;
+    var delta = nowMid - (sr.left + sr.width / 2);
+    var offCenter = introDone && Math.abs(delta) > 8;
+    var offPage = introDone && (nr.right < sr.left + 2 || nr.left > sr.right - 2);
+    if (pivot) pivot.classList.toggle("show", offCenter);
+    if (!btn) return;
+    btn.classList.toggle("show", offPage);
+    btn.classList.toggle("left", delta < 0);
+    btn.classList.toggle("right", delta >= 0);
+    btn.tabIndex = offPage ? 0 : -1;
+    btn.setAttribute("aria-hidden", offPage ? "false" : "true");
+    btn.setAttribute("aria-label", delta < 0 ? "Ease left to now" : "Ease right to now");
+  }
+
+  function easeCenterTo(targetYear) {
+    stopEaseToNow();
+    cohortFramed = false;
+    var localX = pivotLocalX();
+    var startYear = yearAtLocalX(localX);
+    if (Math.abs(startYear - targetYear) < 1e-5) {
+      updateNowJump();
+      return;
+    }
+    var dur = reducedMotion ? 0 : Math.max(520, Math.min(1100, Math.abs(targetYear - startYear) * 16));
+    var t0 = performance.now();
+    function frame(now) {
+      var p = dur === 0 ? 1 : Math.min(1, (now - t0) / dur);
+      var y = startYear + (targetYear - startYear) * easeOutCubic(p);
+      var tw = timelineEl.offsetWidth || 1;
+      var contentX = ((y - viewStart) / viewSpan()) * tw;
+      var next = contentX + scrollerPadLeft() - localX;
+      var max = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+      scrollLock = true;
+      if (next >= -1 && next <= max + 1) {
+        easeScrollTarget = Math.max(0, Math.min(max, next));
+        scroller.scrollLeft = easeScrollTarget;
+        scrollLock = false;
+        scheduleRebuildTicks();
+      } else {
+        fitViewAround(y, localX);
+        relayoutTimeline(false, { lite: true });
+        easeScrollTarget = scroller.scrollLeft;
+        pinYear(y, localX);
+        easeScrollTarget = scroller.scrollLeft;
+        scrollLock = false;
+      }
+      updateNowJump();
+      if (p < 1) easeRaf = requestAnimationFrame(frame);
+      else {
+        easeRaf = 0;
+        nowPinned = true;
+        relayoutTimeline(false);
+        updateNowJump();
+      }
+    }
+    easeRaf = requestAnimationFrame(frame);
   }
 
   function noteZoomInput() {
@@ -1461,8 +2144,8 @@
   }
 
   function scheduleLiveFetch() {
-    var span = (typeof isMobileTape === "function" && isMobileTape()) ? ((tapeScroll && tapeScroll.clientHeight || 400) / (PX || PX_BASE)) : viewSpan();
-    if (span > 80) return; // only when zoomed in enough
+    var span = (typeof isMobileTape === "function" && isMobileTape()) ? ((tapeScroll && tapeScroll.clientHeight || 400) / (PX || PX_BASE)) : yearsOnScreen();
+    if (span > 130) return; // overview stays on the baseline; the default cohort frame still fetches
     if (liveFetchTimer) clearTimeout(liveFetchTimer);
     liveFetchTimer = setTimeout(fetchLiveForView, 420);
   }
@@ -1483,7 +2166,6 @@
       var copy = {};
       for (var k in ev) copy[k] = ev[k];
       copy.live = true;
-      if (copy.weight == null) copy.weight = 3;
       combined.push(copy);
     });
     var inView = combined.filter(function (ev) {
@@ -1493,8 +2175,8 @@
   }
 
   function fetchLiveForView() {
-    var span = (typeof isMobileTape === "function" && isMobileTape()) ? ((tapeScroll && tapeScroll.clientHeight || 400) / (PX || PX_BASE)) : viewSpan();
-    if (span > 80) return;
+    var span = (typeof isMobileTape === "function" && isMobileTape()) ? ((tapeScroll && tapeScroll.clientHeight || 400) / (PX || PX_BASE)) : yearsOnScreen();
+    if (span > 130) return;
     var r = visibleYearRange();
     var key = r.from + ":" + r.to + ":" + Math.round(zoomScale * 10);
     if (key === lastLiveKey) return;
@@ -1528,7 +2210,6 @@
           if (ev.slug && baked["slug:" + ev.slug]) return false;
           return true;
         }).slice(0, 18);
-        liveEvents.forEach(function (ev) { if (ev.weight == null) ev.weight = 3; });
         renderLiveEvents();
       })
       .catch(function () { clearTimeout(timer); });
@@ -1543,21 +2224,29 @@
     el.className = "turning-fall " + tn.type + (show ? " visible" : "");
   }
 
+  function wheelPx(e, delta, axis) {
+    if (e.deltaMode === 1) return delta * 16;
+    if (e.deltaMode === 2) return delta * (axis === "x" ? scroller.clientWidth : scroller.clientHeight);
+    return delta;
+  }
+
   scroller.addEventListener("wheel", function (e) {
-    var dx = e.deltaX, dy = e.deltaY;
+    var dx = wheelPx(e, e.deltaX, "x");
+    var dy = wheelPx(e, e.deltaY, "y");
     if (e.shiftKey && Math.abs(dy) > Math.abs(dx)) { dx = dy; dy = 0; }
-    // Pure vertical → zoom around cursor; horizontal / shift-vertical → plain scroll
-    if (!e.shiftKey && Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 0.5) {
+    // Trackpad pinch arrives as ctrl/meta + wheel. Vertical wheel zooms.
+    // Horizontal wheel always pans, including when a little vertical noise is mixed in.
+    var pinch = e.ctrlKey || e.metaKey;
+    var zooming = pinch || (!e.shiftKey && Math.abs(dy) > Math.abs(dx) * 1.8 && Math.abs(dy) > 0.5);
+    if (zooming && Math.abs(dy) > 0.5) {
       e.preventDefault();
-      var factor = Math.exp(-dy * 0.0018);
       noteZoomInput();
-      applyTimelineZoom(zoomScale * factor, e.clientX);
+      applyTimelineZoom(zoomScale * Math.exp(-dy * (pinch ? 0.01 : 0.0018)));
       return;
     }
-    if (Math.abs(dy) > Math.abs(dx) && !e.shiftKey) {
-      scroller.scrollLeft += dy; e.preventDefault();
-    } else if (Math.abs(dx) > 0.5) {
-      scroller.scrollLeft += dx; e.preventDefault();
+    if (Math.abs(dx) > 0.5) {
+      scroller.scrollLeft += dx;
+      e.preventDefault();
     }
     if (scroller.scrollLeft > 40) scrollHint.classList.add("hidden");
   }, { passive: false });
@@ -1580,16 +2269,84 @@
     var dist = Math.hypot(dx, dy);
     if (pinch.dist < 1) return;
     noteZoomInput();
-    applyTimelineZoom(pinch.scale * (dist / pinch.dist), pinch.midX);
+    applyTimelineZoom(pinch.scale * (dist / pinch.dist));
   }, { passive: false });
   scroller.addEventListener("touchend", function () { pinch = null; }, { passive: true });
   scroller.addEventListener("touchcancel", function () { pinch = null; }, { passive: true });
 
+  var scrollLock = false;
+  function nudgeViewForEdges() {
+    if (scrollLock) return;
+    var tw = timelineEl.offsetWidth;
+    var cw = scroller.clientWidth;
+    if (!tw || tw <= cw + 1) return;
+    var sl = scroller.scrollLeft;
+    var maxScroll = Math.max(0, scroller.scrollWidth - cw);
+    var edge = 36;
+    var span = viewSpan();
+    var px = tw / span;
+    if (sl < edge && viewStart > YEAR_START + 1e-4) {
+      var shiftYears = Math.min(viewStart - YEAR_START, span * 0.5);
+      if (shiftYears * px < 8) return;
+      scrollLock = true;
+      viewStart -= shiftYears;
+      viewEnd -= shiftYears;
+      relayoutTimeline(false);
+      scroller.scrollLeft = sl + shiftYears * (timelineEl.offsetWidth / viewSpan());
+      rebuildTicks();
+      scrollLock = false;
+      return;
+    }
+    if (maxScroll - sl < edge && viewEnd < YEAR_END - 1e-4) {
+      var shiftYearsR = Math.min(YEAR_END - viewEnd, span * 0.5);
+      if (shiftYearsR * px < 8) return;
+      scrollLock = true;
+      viewStart += shiftYearsR;
+      viewEnd += shiftYearsR;
+      relayoutTimeline(false);
+      scroller.scrollLeft = Math.max(0, sl - shiftYearsR * (timelineEl.offsetWidth / viewSpan()));
+      rebuildTicks();
+      scrollLock = false;
+    }
+  }
   scroller.addEventListener("scroll", function () {
-    if (zoomScale >= 1.2) scheduleLiveFetch();
-  }, { passive: true });
-  scroller.addEventListener("scroll", function () {
+    scheduleClearStageKey();
+    if (scrollLock) return;
+    if (progScroll != null && Math.abs(scroller.scrollLeft - progScroll) <= 2) return;
+    if (easeRaf && (easeScrollTarget == null || Math.abs(scroller.scrollLeft - easeScrollTarget) > 1)) stopEaseToNow();
+    if (easeRaf) return;
+    if (nowPinned && introDone && !snapping) {
+      var moved = nowCenterDelta();
+      pinBreak += moved;
+      if (pinBreakTimer) clearTimeout(pinBreakTimer);
+      if (Math.abs(pinBreak) > SNAP_PX) {
+        var extra = pinBreak - moved;
+        var dir = pinBreak < 0 ? -1 : 1;
+        nowPinned = false;
+        cohortFramed = false;
+        pinBreak = 0;
+        suppressSnapUntil = performance.now() + 700;
+        var kick = extra + dir * 40;
+        if (Math.abs(kick) > 1) {
+          scrollLock = true;
+          noteProgScroll(scroller.scrollLeft + kick);
+          scroller.scrollLeft += kick;
+          scrollLock = false;
+        }
+      } else {
+        pinBreakTimer = setTimeout(function () { pinBreak = 0; }, 240);
+        holdNowCenter();
+      }
+      updateNowJump();
+      return;
+    }
+    if (introDone) cohortFramed = false;
     if (scroller.scrollLeft > 40) scrollHint.classList.add("hidden");
+    nudgeViewForEdges();
+    scheduleRebuildTicks();
+    updateNowJump();
+    considerSnapNow();
+    if (zoomScale >= 1.2) scheduleLiveFetch();
   }, { passive: true });
   scroller.addEventListener("keydown", function (e) {
     if (e.key === "ArrowRight") { scroller.scrollLeft += 140; e.preventDefault(); }
@@ -1597,7 +2354,8 @@
   });
   function desktopScrollTarget() {
     var tw = timelineEl.offsetWidth || 6200;
-    var target = (pct(nowYear) / 100) * tw - scroller.clientWidth * 0.55;
+    var contentX = (pct(nowYear) / 100) * tw;
+    var target = contentX + scrollerPadLeft() - scroller.clientWidth / 2;
     var max = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
     if (target < 0) target = 0;
     if (target > max) target = max;
@@ -1615,11 +2373,18 @@
   }
 
   function animateDesktopToNow() {
+    var win = applyCohortZoom();
+    if (!win) {
+      requestAnimationFrame(animateDesktopToNow);
+      return;
+    }
     var target = desktopScrollTarget();
     scroller.scrollLeft = 0;
     if (reducedMotion) {
-      scroller.scrollLeft = target;
+      lockNowCenter();
+      cohortFramed = true;
       scrollHint.classList.add("hidden");
+      introDone = true;
       return;
     }
     timelineEl.classList.add("zooming");
@@ -1632,7 +2397,9 @@
     function frame(now) {
       var p = Math.min(1, (now - t0) / dur);
       var e = easeOutCubic(p);
-      scroller.scrollLeft = start + (target - start) * e;
+      var next = start + (target - start) * e;
+      noteProgScroll(next);
+      scroller.scrollLeft = next;
       var sc = 0.92 + 0.08 * e;
       timelineEl.style.transform = "scale(" + sc + ")";
       if (p < 1) {
@@ -1640,7 +2407,10 @@
       } else {
         timelineEl.style.transform = "";
         timelineEl.classList.remove("zooming");
+        lockNowCenter();
+        cohortFramed = true;
         scrollHint.classList.add("hidden");
+        introDone = true;
         startTickAlong();
       }
     }
@@ -1649,7 +2419,10 @@
 
   // Begin at left, then ease into today
   scroller.scrollLeft = 0;
-  requestAnimationFrame(function () { requestAnimationFrame(animateDesktopToNow); });
+  requestAnimationFrame(function () {
+    fitOverflowText();
+    requestAnimationFrame(animateDesktopToNow);
+  });
 
   // Mobile year-tape
 
@@ -1944,7 +2717,11 @@
   if (tapeScroll) {
     tapeScroll.addEventListener("scroll", onTapeScroll, { passive: true });
     window.addEventListener("resize", function () {
-      if (!isMobileTape()) return;
+      if (!isMobileTape()) {
+        if (cohortFramed) frameCurrentGenerations();
+        else relayoutTimeline(false);
+        return;
+      }
       var y = lastYear || Math.round(nowYear);
       buildTape();
       scrollToYear(y, false);
@@ -2058,36 +2835,42 @@
   }
 
 
-  function zoomByFactor(factor, clientX) {
-    noteZoomInput();
-    applyTimelineZoom(zoomScale * factor, clientX);
-  }
-  function bindZoomControls(root) {
-    if (!root) return;
-    var out = root.querySelector(".zoom-out");
-    var inn = root.querySelector(".zoom-in");
-    var reset = root.querySelector(".zoom-reset");
-    if (out) out.addEventListener("click", function () { zoomByFactor(1 / 1.45, null); });
-    if (inn) inn.addEventListener("click", function () { zoomByFactor(1.45, null); });
-    if (reset) reset.addEventListener("click", function () {
-      viewStart = YEAR_START; viewEnd = YEAR_END; zoomScale = 1;
-      timelineEl.style.width = BASE_TL_WIDTH + "px";
-      relayoutTimeline(false);
-      clearLiveEvents();
-      updateZoomChrome();
-    });
-  }
-  bindZoomControls(document.getElementById("zoomControls"));
-  bindZoomControls(document.getElementById("zoomControlsMobile"));
+  var viewResetBtn = document.getElementById("viewReset");
+  if (viewResetBtn) viewResetBtn.addEventListener("click", function () {
+    if (isMobileTape()) {
+      applyTapeZoom(1, null);
+      scrollToYear(Math.round(nowYearPrecise()), false);
+    } else {
+      resetViewToNow();
+    }
+  });
+  var nowJumpBtn = document.getElementById("nowJump");
+  if (nowJumpBtn) nowJumpBtn.addEventListener("click", function () { easeCenterTo(nowYear); });
   updateZoomChrome();
 
-  // Live now at fine zoom
+  var wakeLiveNow = function () {};
+
+  // Live now. Minute zoom glides every frame; coarser zooms step.
   (function liveNowLoop() {
+    var liveTimer = 0;
+    var liveMode = "timeout";
     function tick() {
+      if (nowPinned || isFullyZoomed()) {
+        liveMode = "raf";
+        smoothNowFrame();
+        requestAnimationFrame(tick);
+        return;
+      }
+      liveMode = "timeout";
       if (viewSpan() < 3 / 365.25) updateNowMarker(true);
       else if (viewSpan() < 2) updateNowMarker(false);
-      requestAnimationFrame(function () { setTimeout(tick, viewSpan() < 1 / 365.25 ? 250 : 1000); });
+      liveTimer = setTimeout(tick, 200);
     }
+    wakeLiveNow = function () {
+      if (liveMode === "raf") return;
+      clearTimeout(liveTimer);
+      liveTimer = setTimeout(tick, 0);
+    };
     tick();
   })();
 
@@ -2103,19 +2886,12 @@
     getView: function () { return { start: viewStart, end: viewEnd }; },
     getTapeZoom: function () { return tapeZoom; },
     getLiveEvents: function () { return liveEvents.slice(); },
-    setZoomScale: function (s, x) { noteZoomInput(); applyTimelineZoom(s, x); },
+    setZoomScale: function (s) { noteZoomInput(); applyTimelineZoom(s); },
     zoomToMinutes: function () {
       noteZoomInput();
-      var y = nowYearPrecise();
-      viewStart = y - MIN_SPAN / 2; viewEnd = y + MIN_SPAN / 2;
-      zoomScale = FULL_SPAN / MIN_SPAN;
-      relayoutTimeline(false);
+      applyTimelineZoom(FULL_SPAN / MIN_SPAN);
     },
-    resetZoom: function () {
-      viewStart = YEAR_START; viewEnd = YEAR_END; zoomScale = 1;
-      timelineEl.style.width = BASE_TL_WIDTH + "px";
-      relayoutTimeline(false); clearLiveEvents(); updateZoomChrome();
-    },
+    resetZoom: function () { resetViewToNow(); },
     updateTurningFall: updateTurningFall
   };
   updateTurningFall();

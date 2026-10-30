@@ -1,2 +1,5 @@
 shot-*.png
 .DS_Store
+
+# Local Netlify folder
+.netlify
