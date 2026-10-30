@@ -50,34 +50,6 @@
     letter-spacing: 0.18em;
     text-transform: uppercase;
   }
-  .turning-head {
-    margin-top: 0.45rem;
-    max-width: 40rem;
-  }
-  .turning-head .th-ordinal {
-    font-size: 0.58rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--ink-muted);
-  }
-  .turning-head .th-name {
-    margin-top: 0.12rem;
-    font-size: clamp(0.95rem, 1.6vw, 1.15rem);
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    line-height: 1.25;
-  }
-  .turning-head .th-meta {
-    margin-top: 0.15rem;
-    font-size: 0.62rem;
-    letter-spacing: 0.06em;
-    color: var(--ink-faint);
-  }
-  .turning-head.high .th-name { color: var(--high); }
-  .turning-head.awakening .th-name { color: var(--awakening); }
-  .turning-head.unraveling .th-name { color: var(--unraveling); }
-  .turning-head.crisis .th-name { color: var(--crisis); }
-
   /* Coloured fall-line from the top section when zoomed out */
   .turning-fall {
     position: absolute;
@@ -104,13 +76,16 @@
     padding: 0 2.5rem 0.4rem;
     font-size: 0.58rem;
     letter-spacing: 0.12em;
-    text-transform: uppercase;
+    text-transform: lowercase;
     color: var(--ink-faint);
     opacity: 0;
     animation: fadeIn 0.7s var(--ease) 0.25s forwards;
     line-height: 1.55;
   }
-  .chain strong { color: var(--ink-muted); font-weight: 500; }
+  .chain strong {
+    color: rgba(255,255,255,0.92);
+    font-weight: 600;
+  }
 
   .desktop-stage {
     flex: 1 1 auto;
@@ -332,16 +307,22 @@
     flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.35rem;
     font-size: 0.58rem;
     letter-spacing: 0.04em;
     color: var(--ink-muted);
-    text-decoration: none;
     white-space: nowrap;
   }
-  .site-footer .credit:hover { color: var(--ink); }
+  .site-footer .credit a {
+    display: inline-flex;
+    align-items: center;
+    color: inherit;
+    text-decoration: none;
+  }
+  .site-footer .credit a:hover { color: var(--ink); }
   .site-footer .credit svg {
-    width: 12px; height: 12px; fill: currentColor; flex-shrink: 0;
+    width: 1em; height: 1em; fill: currentColor; flex-shrink: 0;
+    display: block;
   }
 
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -359,15 +340,13 @@
       animation: none; opacity: 1;
     }
     .brand h1 { font-size: 0.95rem; letter-spacing: 0.16em; }
-    .turning-head {
-      margin-top: 0.35rem;
-      max-width: none;
-    }
-    .turning-head .th-ordinal { font-size: 0.52rem; }
-    .turning-head .th-name { font-size: 0.95rem; }
-    .turning-head .th-meta { font-size: 0.55rem; }
     .turning-fall { left: 1rem; }
-    .chain { display: none; }
+    .chain {
+      display: block;
+      padding: 0 1rem 0.35rem;
+      font-size: 0.5rem;
+      letter-spacing: 0.08em;
+    }
     .site-footer {
       flex: 0 0 auto;
       padding: 0.45rem 1rem 0.65rem;
@@ -516,15 +495,10 @@
   <div class="brand">
     <h1>Four Turnings</h1>
   </div>
-  <div class="turning-head crisis" id="turningHead" aria-live="polite">
-    <div class="th-ordinal" id="thOrdinal">Fourth Turning · Crisis</div>
-    <div class="th-name" id="thName">—</div>
-    <div class="th-meta" id="thMeta">—</div>
-  </div>
   <div class="turning-fall crisis" id="turningFall" aria-hidden="true"></div>
 </header>
 <div class="chain">
-  Parent–child chain: <strong>Heroes</strong> raise Prophets · <strong>Prophets</strong> raise Nomads · <strong>Nomads</strong> raise Artists · <strong>Artists</strong> raise the next Heroes
+  <strong>heroes</strong> raise <strong>prophets</strong> raise <strong>nomads</strong> raise artists raise the next heroes
 </div>
 
 <div class="desktop-stage" id="desktopStage">
@@ -595,10 +569,7 @@
 </div>
 <footer class="site-footer">
   <p class="note">Turning &amp; generation dates follow Strauss &amp; Howe (via saeculum.info atlas). Event dates: Grokipedia. Also: generationaldynamics.com (diagonal life-stages), timepage.org. Where sources differ on era boundaries, S&amp;H published dates are used. Civil War saeculum has no Hero cohort (S&amp;H anomaly).</p>
-  <a class="credit" href="https://x.com/iBaldy" target="_blank" rel="noopener noreferrer">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-    <span>Created by Liam Baldwin @iBaldy</span>
-  </a>
+  <span class="credit">Created by Liam Baldwin <a href="https://x.com/iBaldy" target="_blank" rel="noopener noreferrer" aria-label="Liam Baldwin on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a></span>
 </footer>
 <div class="tooltip" id="tooltip" role="tooltip"></div>
 
@@ -1082,7 +1053,7 @@
         { stage: "midlife", age: 55 },
         { stage: "elder", age: 77 }
       ];
-      var nudgePx = 10; // slight right offset so labels clear band edges / each other
+      var nudgePx = 14; // slight right offset so labels clear band edges / each other
       generations.forEach(function (g) {
         var midBirth = (g.start + g.end) / 2;
         stageYears.forEach(function (sy) {
@@ -1199,38 +1170,12 @@
     return saecula[saecula.length - 1];
   }
 
-  var TURNING_ORDINAL = {
-    high: { n: "First", label: "High" },
-    awakening: { n: "Second", label: "Awakening" },
-    unraveling: { n: "Third", label: "Unraveling" },
-    crisis: { n: "Fourth", label: "Crisis" }
-  };
-  var turningHead = document.getElementById("turningHead");
-  var thOrdinal = document.getElementById("thOrdinal");
-  var thName = document.getElementById("thName");
-  var thMeta = document.getElementById("thMeta");
-  var lastHeadKey = "";
-
   var turningFall = document.getElementById("turningFall");
   function updateTurningHead(year, span) {
-    if (!turningHead) return;
+    if (!turningFall) return;
     var tn = turningAt(year);
-    var sc = saeculumAt(year);
-    var ord = TURNING_ORDINAL[tn.type] || { n: "", label: archTitle(tn.type) };
-    var key = tn.name + "|" + tn.start + "|" + sc.name;
-    if (key !== lastHeadKey) {
-      lastHeadKey = key;
-      turningHead.className = "turning-head " + tn.type;
-      thOrdinal.textContent = ord.n + " Turning · " + ord.label;
-      thName.textContent = tn.name;
-      thMeta.textContent = tn.start + "–" + tn.end +
-        (tn.projected ? " · projected" : "") +
-        " · " + sc.name + " saeculum";
-    }
-    if (turningFall) {
-      turningFall.className = "turning-fall " + tn.type +
-        ((span != null && span / MS_YEAR > 12) ? " visible" : "");
-    }
+    turningFall.className = "turning-fall " + tn.type +
+      ((span != null && span / MS_YEAR > 12) ? " visible" : "");
   }
 
 
