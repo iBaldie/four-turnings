@@ -49,50 +49,64 @@ function decode(s) {
 
 function parseSearch(html) {
   var out = [];
-  var re = /data-slug="([^"]+)"\s+data-search-result-link="true"\s+data-scroll-anchor-text="([^"]*)"/g;
+  var re = /data-slug="([^"]+)"[^>]*data-search-result-link="true"[^>]*data-scroll-anchor-text="([^"]*)"/g;
   var m;
-  while ((m = re.exec(html))) {
-    out.push({ slug: m[1], text: decode(m[2]) });
+  while ((m = re.exec(html))) out.push({ slug: m[1], text: decode(m[2]) });
+  if (!out.length) {
+    re = /data-search-result-link="true"[^>]*data-slug="([^"]+)"[^>]*data-scroll-anchor-text="([^"]*)"/g;
+    while ((m = re.exec(html))) out.push({ slug: m[1], text: decode(m[2]) });
   }
-  // fallback: looser attribute order
   if (!out.length) {
     re = /class="result-row[^"]*"\s+data-slug="([^"]+)"[^>]*data-scroll-anchor-text="([^"]*)"/g;
-    while ((m = re.exec(html))) {
-      out.push({ slug: m[1], text: decode(m[2]) });
-    }
+    while ((m = re.exec(html))) out.push({ slug: m[1], text: decode(m[2]) });
   }
   return out;
 }
 
 function yearFromText(text) {
-  var m = String(text).match(/\b(20[1-2]\d)\b/);
+  var m = String(text).match(/\b(20(?:1[5-9]|2[0-6]))\b/);
   return m ? Number(m[1]) : null;
 }
 
 function labelFromSlug(slug) {
   return decode(slug)
     .replace(/_/g, " ")
-    .replace(/%E2%80%93/g, "–")
+    .replace(/%E2%80%93/gi, "–")
+    .replace(/–/g, "–")
     .replace(/%27/g, "'")
-    .replace(/\b\w/g, function (c) { return c.toUpperCase(); })
     .slice(0, 40);
 }
 
-// Seed queries for recent Anglo-American / world key events; plus year pages.
-function buildQueries(nowY) {
-  var qs = [
-    "Russian invasion of Ukraine",
-    "Death and state funeral of Elizabeth II",
-    "COVID-19 pandemic",
-    "Israel Hamas war",
-    "January 6 United States Capitol attack"
-  ];
-  for (var y = Math.max(2015, nowY - 6); y <= nowY; y++) qs.push(String(y));
-  return qs;
+function isNoise(slug, text) {
+  var s = String(slug || "").toLowerCase();
+  var t = String(text || "").toLowerCase();
+  if (/^\d{4}$/.test(s)) return true;
+  if (/meistriliiga|damallsvenskan|scheldeprijs|iditarod|kakkonen|toppserien|athletissima|veikkausliiga|canneseries|flygsystem|lnfa|football|soccer|season|championship|league|cup|_mk$|yr4/.test(s)) return true;
+  if (/in_(russia|belgium|israel|switzerland|asia|europe|africa|oceania)|pandemic_in_/.test(s)) return true;
+  if (/corporate_responses|fortifications_of|lithuania_and|prelude_to|planning_for|reactions_to|sexual_violence|missing_tapes|in_popular_culture|commemorative/.test(s)) return true;
+  if (/twitter_prediction|flags_of|horses_of|jewels_of|household_of/.test(s)) return true;
+  if (/(league|championship|season of|football|soccer)/.test(t) && !/war|invasion|pandemic|attack|crisis/.test(t)) return true;
+  return false;
 }
 
-// Known high-signal recent pages (verified on Grokipedia) as a fast path.
+function topicKey(slug, label) {
+  var s = String(slug || label || "").toLowerCase();
+  if (/capitol/.test(s) && /january|jan(uary)?_?6|6_january/.test(s)) return "jan6";
+  if (/russian_invasion_of_ukraine|ukraine/.test(s) && /invasion|war/.test(s)) return "ukraine2022";
+  if (/elizabeth_ii|elizabeth ii/.test(s) && /death|funeral|died/.test(s)) return "qeii2022";
+  if (/israel.?hamas|hamas.?war/.test(s)) return "israelhamas2023";
+  if (/covid|covid-19|coronavirus/.test(s) && !/in_/.test(s)) return "covid";
+  return s.replace(/[^a-z0-9]+/g, "_").slice(0, 48);
+}
+
+// High-signal recent pages verified on Grokipedia (fast path / always included when in range).
 var KNOWN = [
+  {
+    slug: "January_6_United_States_Capitol_attack",
+    label: "Jan 6 Capitol",
+    year: 2021,
+    detail: "January 6, 2021 attack on the U.S. Capitol (Grokipedia)."
+  },
   {
     slug: "Russian_invasion_of_Ukraine",
     label: "Ukraine invasion",
@@ -104,7 +118,20 @@ var KNOWN = [
     label: "Elizabeth II dies",
     year: 2022,
     detail: "Elizabeth II died 8 September 2022 at Balmoral Castle (Grokipedia)."
+  },
+  {
+    slug: "Israel–Hamas_war",
+    label: "Israel–Hamas war",
+    year: 2023,
+    detail: "Israel–Hamas war beginning October 2023 (Grokipedia)."
   }
+];
+
+var SEARCH_QUERIES = [
+  "January 6 United States Capitol attack",
+  "Russian invasion of Ukraine",
+  "Death and state funeral of Elizabeth II",
+  "Israel Hamas war"
 ];
 
 exports.handler = async function (event) {
@@ -115,67 +142,77 @@ exports.handler = async function (event) {
     "Netlify-CDN-Cache-Control": "public, max-age=86400, durable"
   };
   if (event.httpMethod === "OPTIONS") {
-    return { statusCode: 204, headers: Object.assign({ "Access-Control-Allow-Methods": "GET,OPTIONS" }, headers), body: "" };
+    return {
+      statusCode: 204,
+      headers: Object.assign({ "Access-Control-Allow-Methods": "GET,OPTIONS" }, headers),
+      body: ""
+    };
   }
   try {
     var nowY = new Date().getFullYear();
-    var since = nowY - 8;
+    var since = Math.max(2015, nowY - 8);
     try {
       var qSince = event.queryStringParameters && event.queryStringParameters.since;
-      if (qSince) {
-        var n = Number(qSince);
-        if (isFinite(n)) since = Math.min(nowY, Math.max(2000, Math.floor(n) - 6));
+      if (qSince && isFinite(Number(qSince))) {
+        since = Math.min(nowY, Math.max(2015, Math.floor(Number(qSince)) - 6));
       }
     } catch (e) {}
 
-    var byKey = {};
-    function add(ev) {
+    var byTopic = {};
+    function add(ev, force) {
       if (!ev || !ev.year || !ev.label) return;
       if (ev.year < since || ev.year > nowY + 1) return;
-      var key = String(ev.label).toLowerCase() + "|" + ev.year;
-      if (byKey[key]) return;
-      byKey[key] = {
-        label: ev.label,
+      if (!force && isNoise(ev.slug || "", ev.detail || "")) return;
+      var topic = topicKey(ev.slug || "", ev.label);
+      var row = {
+        label: String(ev.label).slice(0, 36),
         year: ev.year,
         detail: ev.detail || (ev.label + " (" + ev.year + ", Grokipedia)."),
         source: ev.source || ("https://grokipedia.com/page/" + encodeURIComponent(ev.slug || ev.label)),
         slug: ev.slug || null
       };
+      var prev = byTopic[topic];
+      if (!prev || force) {
+        byTopic[topic] = row;
+        return;
+      }
+      var prevLen = (prev.slug || "").length;
+      var nextLen = (row.slug || "").length;
+      if (nextLen && (!prevLen || nextLen < prevLen)) byTopic[topic] = row;
     }
 
-    KNOWN.forEach(add);
-
-    // Live search scrape (best-effort, short timeouts)
-    var queries = buildQueries(nowY).slice(0, 6);
     await Promise.all(
-      queries.map(function (q) {
+      SEARCH_QUERIES.map(function (q) {
         var url = "https://grokipedia.com/search?q=" + encodeURIComponent(q);
         return get(url, 2200)
           .then(function (html) {
-            parseSearch(html).slice(0, 8).forEach(function (row) {
+            var rows = parseSearch(html);
+            // Prefer the first non-noise result for this query
+            for (var i = 0; i < rows.length && i < 6; i++) {
+              var row = rows[i];
+              if (isNoise(row.slug, row.text)) continue;
               var year = yearFromText(row.text) || yearFromText(row.slug);
-              if (!year) return;
-              // skip sports/season noise
-              var slugL = row.slug.toLowerCase();
-              if (/damallsvenskan|scheldeprijs|iditarod|kakkonen|toppserien|athletissima|veikkausliiga|canneseries|_mk$|yr4|football|soccer|season/.test(slugL)) return;
-              if (/^\d{4}$/.test(row.slug)) return; // bare year pages
+              if (!year) continue;
               add({
                 slug: row.slug,
-                label: labelFromSlug(row.slug).slice(0, 36),
+                label: labelFromSlug(row.slug),
                 year: year,
                 detail: (row.text || "").slice(0, 180) + " (Grokipedia).",
                 source: "https://grokipedia.com/page/" + encodeURIComponent(row.slug)
               });
-            });
+            }
           })
           .catch(function () {});
       })
     );
 
-    var events = Object.keys(byKey)
-      .map(function (k) { return byKey[k]; })
-      .sort(function (a, b) { return a.year - b.year; })
-      .slice(0, 24);
+    // Seed known canonical pages last so they win topic collisions
+    KNOWN.forEach(function (ev) { add(ev, true); });
+
+    var events = Object.keys(byTopic)
+      .map(function (k) { return byTopic[k]; })
+      .sort(function (a, b) { return a.year - b.year || a.label.localeCompare(b.label); })
+      .slice(0, 12);
 
     return {
       statusCode: 200,
