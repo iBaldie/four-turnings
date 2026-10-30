@@ -38,15 +38,11 @@
 
   header {
     flex: 0 0 auto;
-    padding: 1.1rem 2.5rem 0.65rem;
+    padding: 1.1rem 2.5rem 0.45rem;
     opacity: 0;
     animation: fadeIn 0.7s var(--ease) 0.05s forwards;
     z-index: 20;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 0.75rem 2rem;
+    position: relative;
   }
   .brand h1 {
     font-size: clamp(1.05rem, 2vw, 1.4rem);
@@ -55,8 +51,8 @@
     text-transform: uppercase;
   }
   .turning-head {
-    text-align: right;
-    min-width: min(100%, 22rem);
+    margin-top: 0.45rem;
+    max-width: 40rem;
   }
   .turning-head .th-ordinal {
     font-size: 0.58rem;
@@ -65,14 +61,14 @@
     color: var(--ink-muted);
   }
   .turning-head .th-name {
-    margin-top: 0.15rem;
-    font-size: clamp(0.95rem, 1.6vw, 1.2rem);
+    margin-top: 0.12rem;
+    font-size: clamp(0.95rem, 1.6vw, 1.15rem);
     font-weight: 500;
     letter-spacing: 0.04em;
     line-height: 1.25;
   }
   .turning-head .th-meta {
-    margin-top: 0.2rem;
+    margin-top: 0.15rem;
     font-size: 0.62rem;
     letter-spacing: 0.06em;
     color: var(--ink-faint);
@@ -81,6 +77,28 @@
   .turning-head.awakening .th-name { color: var(--awakening); }
   .turning-head.unraveling .th-name { color: var(--unraveling); }
   .turning-head.crisis .th-name { color: var(--crisis); }
+
+  /* Coloured fall-line from the top section when zoomed out */
+  .turning-fall {
+    position: absolute;
+    top: 100%;
+    left: 2.5rem;
+    width: 2px;
+    height: 0;
+    pointer-events: none;
+    z-index: 15;
+    opacity: 0;
+    background: linear-gradient(180deg, currentColor, transparent);
+    transition: opacity 0.45s var(--ease), height 0.45s var(--ease);
+  }
+  .turning-fall.high { color: var(--high); }
+  .turning-fall.awakening { color: var(--awakening); }
+  .turning-fall.unraveling { color: var(--unraveling); }
+  .turning-fall.crisis { color: var(--crisis); }
+  .turning-fall.visible {
+    opacity: 0.85;
+    height: min(38vh, 16rem);
+  }
   .chain {
     flex: 0 0 auto;
     padding: 0 2.5rem 0.4rem;
@@ -255,13 +273,13 @@
   .stage-row[data-stage="young"] { top: 3.6rem; }
   .stage-row[data-stage="child"] { top: 5.4rem; }
   .stage-label {
-    position: absolute; left: 0.5rem; z-index: 2;
+    position: absolute; left: 0.85rem; z-index: 2;
     font-size: 0.45rem; letter-spacing: 0.12em; text-transform: uppercase;
     color: var(--ink-faint); background: rgba(5,5,5,0.85); padding: 0.1rem 0.35rem;
   }
   .gen-chip {
     position: absolute; top: 0.2rem; height: 1.15rem;
-    transform: translateX(-50%);
+    transform: translateX(0);
     padding: 0 0.35rem;
     border: 1px solid currentColor; border-radius: 1px;
     font-size: 0.45rem; letter-spacing: 0.06em; text-transform: uppercase;
@@ -289,6 +307,43 @@
   }
   .tooltip .tt-body { color: var(--ink-muted); }
 
+  .site-footer {
+    flex: 0 0 auto;
+    padding: 0.55rem 2.5rem 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.65rem 1.5rem;
+    border-top: 1px solid var(--line);
+    opacity: 0;
+    animation: fadeIn 0.7s var(--ease) 1.2s forwards;
+    z-index: 20;
+  }
+  .site-footer .note {
+    flex: 1 1 16rem;
+    font-size: 0.52rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.02em;
+    max-width: 38rem;
+    line-height: 1.45;
+  }
+  .site-footer .credit {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.04em;
+    color: var(--ink-muted);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .site-footer .credit:hover { color: var(--ink); }
+  .site-footer .credit svg {
+    width: 12px; height: 12px; fill: currentColor; flex-shrink: 0;
+  }
+
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
   @media (prefers-reduced-motion: reduce) {
@@ -300,24 +355,38 @@
   @media (max-width: 700px) {
     html, body { height: 100%; overflow: hidden; }
     header {
-      padding: 0.65rem 1rem 0.35rem;
+      padding: 0.65rem 1rem 0.3rem;
       animation: none; opacity: 1;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 0.45rem;
     }
     .brand h1 { font-size: 0.95rem; letter-spacing: 0.16em; }
     .turning-head {
-      text-align: left;
-      min-width: 0;
-      width: 100%;
-      padding-top: 0.15rem;
-      border-top: 1px solid var(--line);
+      margin-top: 0.35rem;
+      max-width: none;
     }
     .turning-head .th-ordinal { font-size: 0.52rem; }
-    .turning-head .th-name { font-size: 1.0rem; }
-    .turning-head .th-meta { font-size: 0.58rem; }
+    .turning-head .th-name { font-size: 0.95rem; }
+    .turning-head .th-meta { font-size: 0.55rem; }
+    .turning-fall { left: 1rem; }
     .chain { display: none; }
+    .site-footer {
+      flex: 0 0 auto;
+      padding: 0.45rem 1rem 0.65rem;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      gap: 0.45rem;
+      height: auto;
+    }
+    .site-footer .note {
+      flex: 0 0 auto;
+      width: 100%;
+      max-width: none;
+      font-size: 0.48rem;
+      line-height: 1.4;
+    }
+    .site-footer .credit {
+      font-size: 0.52rem;
+    }
     .desktop-stage { display: none !important; }
 
     .mobile-stage {
@@ -452,6 +521,7 @@
     <div class="th-name" id="thName">—</div>
     <div class="th-meta" id="thMeta">—</div>
   </div>
+  <div class="turning-fall crisis" id="turningFall" aria-hidden="true"></div>
 </header>
 <div class="chain">
   Parent–child chain: <strong>Heroes</strong> raise Prophets · <strong>Prophets</strong> raise Nomads · <strong>Nomads</strong> raise Artists · <strong>Artists</strong> raise the next Heroes
@@ -523,6 +593,13 @@
     </div>
   </div>
 </div>
+<footer class="site-footer">
+  <p class="note">Turning &amp; generation dates follow Strauss &amp; Howe (via saeculum.info atlas). Event dates: Grokipedia. Also: generationaldynamics.com (diagonal life-stages), timepage.org. Where sources differ on era boundaries, S&amp;H published dates are used. Civil War saeculum has no Hero cohort (S&amp;H anomaly).</p>
+  <a class="credit" href="https://x.com/iBaldy" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+    <span>Created by Liam Baldwin @iBaldy</span>
+  </a>
+</footer>
 <div class="tooltip" id="tooltip" role="tooltip"></div>
 
 <script>
@@ -995,27 +1072,41 @@
       idx++;
     }
 
-    // Generation chips in childhood when year-scale
+    // Generation chips on the life-stage diagonal across the whole span
     stagesEl.querySelectorAll(".gen-chip").forEach(function (n) { n.remove(); });
-    if (span / MS_YEAR > 8) {
-      var childRow = stagesEl.querySelector('[data-stage="child"]');
+    if (span / MS_YEAR > 5) {
+      // Approx mid-age for each life stage (S&H ~22y bands)
+      var stageYears = [
+        { stage: "child", age: 11 },
+        { stage: "young", age: 33 },
+        { stage: "midlife", age: 55 },
+        { stage: "elder", age: 77 }
+      ];
+      var nudgePx = 10; // slight right offset so labels clear band edges / each other
       generations.forEach(function (g) {
-        var mid = (g.start + g.end) / 2;
-        var x = xForMs(yearToMs(mid), focusMs, span, width);
-        if (x < -40 || x > width + 40) return;
-        var chip = document.createElement("div");
-        chip.className = "gen-chip " + g.arch + (g.projected ? " projected" : "");
-        chip.style.left = x + "px";
-        chip.innerHTML = "<span>" + esc(g.short) + '</span><span class="garch">' + esc(archTitle(g.arch)) + "</span>";
-        chip.dataset.tipTitle = g.name + " · " + archTitle(g.arch);
-        chip.dataset.tipBody = "Born " + g.start + "–" + g.end + ". " + ARCH_COPY[g.arch];
-        childRow.appendChild(chip);
+        var midBirth = (g.start + g.end) / 2;
+        stageYears.forEach(function (sy) {
+          var atYear = midBirth + sy.age;
+          if (atYear < YEAR_START - 5 || atYear > YEAR_END + 5) return;
+          var x = xForMs(yearToMs(atYear), focusMs, span, width) + nudgePx;
+          if (x < -60 || x > width + 60) return;
+          var row = stagesEl.querySelector('[data-stage="' + sy.stage + '"]');
+          if (!row) return;
+          var chip = document.createElement("div");
+          chip.className = "gen-chip " + g.arch + (g.projected ? " projected" : "");
+          chip.style.left = x + "px";
+          chip.innerHTML = "<span>" + esc(g.short) + '</span><span class="garch">' + esc(archTitle(g.arch)) + "</span>";
+          chip.dataset.tipTitle = g.name + " · " + archTitle(g.arch);
+          chip.dataset.tipBody = "Born " + g.start + "–" + g.end + " · ~" + sy.stage +
+            " around " + Math.round(atYear) + ". " + ARCH_COPY[g.arch];
+          row.appendChild(chip);
+        });
       });
     }
 
     nowClock.textContent = formatClock(nowMs);
     zoomHud.textContent = "Zoom · " + zoomLabel(span);
-    updateTurningHead(msToYear(nowMs));
+    updateTurningHead(msToYear(nowMs), span);
     if (!reducedMotion && introDone && smoothEnergy < 0.08) nowMarker.classList.add("pulse");
     else if (reducedMotion) nowMarker.classList.remove("pulse");
   }
@@ -1120,20 +1211,26 @@
   var thMeta = document.getElementById("thMeta");
   var lastHeadKey = "";
 
-  function updateTurningHead(year) {
+  var turningFall = document.getElementById("turningFall");
+  function updateTurningHead(year, span) {
     if (!turningHead) return;
     var tn = turningAt(year);
     var sc = saeculumAt(year);
     var ord = TURNING_ORDINAL[tn.type] || { n: "", label: archTitle(tn.type) };
     var key = tn.name + "|" + tn.start + "|" + sc.name;
-    if (key === lastHeadKey) return;
-    lastHeadKey = key;
-    turningHead.className = "turning-head " + tn.type;
-    thOrdinal.textContent = ord.n + " Turning · " + ord.label;
-    thName.textContent = tn.name;
-    thMeta.textContent = tn.start + "–" + tn.end +
-      (tn.projected ? " · projected" : "") +
-      " · " + sc.name + " saeculum";
+    if (key !== lastHeadKey) {
+      lastHeadKey = key;
+      turningHead.className = "turning-head " + tn.type;
+      thOrdinal.textContent = ord.n + " Turning · " + ord.label;
+      thName.textContent = tn.name;
+      thMeta.textContent = tn.start + "–" + tn.end +
+        (tn.projected ? " · projected" : "") +
+        " · " + sc.name + " saeculum";
+    }
+    if (turningFall) {
+      turningFall.className = "turning-fall " + tn.type +
+        ((span != null && span / MS_YEAR > 12) ? " visible" : "");
+    }
   }
 
 
@@ -1144,7 +1241,7 @@
   function updateReadout(nowMs, span) {
     var year = msToYear(nowMs);
     var yInt = Math.floor(year);
-    updateTurningHead(year);
+    updateTurningHead(year, span);
     roYear.textContent = String(yInt);
     cursorYear.textContent = span < 2 * MS_DAY ? formatTick(nowMs, span < 2 * MS_HOUR ? "minute" : "hour", true) : String(yInt);
     roClock.textContent = formatClock(nowMs);
@@ -1273,54 +1370,67 @@
     updateReadout(nowMs, span);
   }
 
-  // --- Input: scroll velocity → zoom energy ---
+  // --- Input: zoom ONLY from horizontal movement speed (stationary press = no zoom) ---
+  var horizSpeed = 0; // px/ms, decays when idle
+  var drag = null; // { x, t, pointerId }
+  var SPEED_REF = 1.15; // px/ms ≈ full energy
+
   function bumpEnergy(amount) {
     scrollEnergy = clamp(scrollEnergy + amount, 0, 1);
   }
 
+  function applyHorizSpeed(pxPerMs) {
+    if (reducedMotion) return;
+    if (!(pxPerMs > 0)) return;
+    horizSpeed = Math.max(horizSpeed * 0.35, pxPerMs);
+    scrollEnergy = clamp(horizSpeed / SPEED_REF, 0, 1);
+  }
+
   function onWheel(e) {
+    // Horizontal trackpad/wheel only — ignore pure vertical scroll
+    var dx = e.deltaX;
+    if (Math.abs(dx) < 0.75) return;
     e.preventDefault();
-    var speed = Math.min(1, Math.hypot(e.deltaX, e.deltaY) / 320);
-    bumpEnergy(0.025 + speed * 0.18);
+    // delta is per event; approximate px/ms using a short window
+    var speed = Math.min(2.5, Math.abs(dx) / 16);
+    applyHorizSpeed(speed);
   }
 
-  var touchState = null;
-  function onTouchStart(e) {
-    if (!e.touches || !e.touches.length) return;
-    touchState = { y: e.touches[0].clientY, x: e.touches[0].clientX, t: performance.now(), vy: 0 };
+  function onPointerDown(e) {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    drag = { x: e.clientX, t: performance.now(), pointerId: e.pointerId };
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+    // Stationary press must NOT change zoom — do not bump energy here
   }
-  function onTouchMove(e) {
-    if (!touchState || !e.touches || !e.touches.length) return;
-    e.preventDefault();
-    var y = e.touches[0].clientY;
-    var x = e.touches[0].clientX;
+  function onPointerMove(e) {
+    if (!drag || e.pointerId !== drag.pointerId) return;
     var t = performance.now();
-    var dt = Math.max(1, t - touchState.t);
-    var dy = y - touchState.y;
-    var dx = x - touchState.x;
-    var v = Math.hypot(dx, dy) / dt; // px/ms
-    touchState = { y: y, x: x, t: t, vy: v };
-    bumpEnergy(clamp(v * 4.5, 0.015, 0.35));
+    var dt = Math.max(8, t - drag.t);
+    var dx = e.clientX - drag.x;
+    drag = { x: e.clientX, t: t, pointerId: drag.pointerId };
+    // Only horizontal component counts
+    var speed = Math.abs(dx) / dt;
+    if (speed < 0.02) return; // noise / near-stationary
+    e.preventDefault();
+    applyHorizSpeed(speed);
   }
-  function onTouchEnd() {
-    if (!touchState) return;
-    // gentle fling
-    bumpEnergy(clamp(touchState.vy * 10, 0, 0.55));
-    touchState = null;
+  function onPointerUp(e) {
+    if (!drag || (e.pointerId != null && e.pointerId !== drag.pointerId)) return;
+    drag = null;
+    // Speed continues to decay in the rAF loop → ease back in
   }
 
-  if (viewport) {
-    viewport.addEventListener("wheel", onWheel, { passive: false });
-    viewport.addEventListener("touchstart", onTouchStart, { passive: true });
-    viewport.addEventListener("touchmove", onTouchMove, { passive: false });
-    viewport.addEventListener("touchend", onTouchEnd, { passive: true });
+  function bindZoomSurface(el) {
+    if (!el) return;
+    el.addEventListener("wheel", onWheel, { passive: false });
+    el.addEventListener("pointerdown", onPointerDown, { passive: true });
+    el.addEventListener("pointermove", onPointerMove, { passive: false });
+    el.addEventListener("pointerup", onPointerUp, { passive: true });
+    el.addEventListener("pointercancel", onPointerUp, { passive: true });
+    el.addEventListener("lostpointercapture", onPointerUp, { passive: true });
   }
-  if (tapeViewport) {
-    tapeViewport.addEventListener("wheel", onWheel, { passive: false });
-    tapeViewport.addEventListener("touchstart", onTouchStart, { passive: true });
-    tapeViewport.addEventListener("touchmove", onTouchMove, { passive: false });
-    tapeViewport.addEventListener("touchend", onTouchEnd, { passive: true });
-  }
+  bindZoomSurface(viewport);
+  bindZoomSurface(tapeViewport);
 
   // --- Live events merge (same as before) ---
   function eventKey(ev) {
@@ -1394,10 +1504,12 @@
   function frame(now) {
     var dt = Math.min(0.05, (now - lastFrame) / 1000);
     lastFrame = now;
-    // decay scroll energy
-    // Lag + slow decay → controllable inertia, leisurely ease back to rest
-    smoothEnergy += (scrollEnergy - smoothEnergy) * Math.min(1, dt * 3.2);
-    scrollEnergy = Math.max(0, scrollEnergy - dt * 0.14);
+    // Decay horizontal speed when idle (held still or released)
+    horizSpeed = Math.max(0, horizSpeed - dt * 1.6);
+    if (horizSpeed < 0.015) horizSpeed = 0;
+    scrollEnergy = clamp(horizSpeed / SPEED_REF, 0, 1);
+    // Lag for smooth zoom-out / ease-back
+    smoothEnergy += (scrollEnergy - smoothEnergy) * Math.min(1, dt * 2.4);
 
     var nowMs = Date.now();
     var span = currentSpan();
@@ -1417,7 +1529,10 @@
     getSpan: currentSpan,
     getZoomLabel: function () { return zoomLabel(currentSpan()); },
     bumpEnergy: bumpEnergy,
-    setEnergy: function (e) { holdSpan = null; scrollEnergy = clamp(e, 0, 1); },
+    applyHorizSpeed: applyHorizSpeed,
+    getHorizSpeed: function () { return horizSpeed; },
+    getSmoothEnergy: function () { return smoothEnergy; },
+    setEnergy: function (e) { holdSpan = null; horizSpeed = clamp(e, 0, 1) * SPEED_REF; scrollEnergy = clamp(e, 0, 1); },
     holdSpanMs: function (ms) { holdSpan = ms == null ? null : clamp(ms, SPAN_MIN, SPAN_MAX); },
     holdZoom: function (level) {
       // level: "rest" | "close" | "mid" | "out"
