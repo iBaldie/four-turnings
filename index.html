@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Four Turnings</title>
 <style>
+
   :root {
     --bg: #050505;
     --ink: #ffffff;
@@ -66,6 +67,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
+    touch-action: none;
   }
   .mobile-stage { display: none; }
 
@@ -76,197 +78,169 @@
   .edge-fade.left { left: 0; background: linear-gradient(90deg, var(--bg), transparent); }
   .edge-fade.right { right: 0; background: linear-gradient(270deg, var(--bg), transparent); }
 
-  .scroll-hint {
-    position: absolute; bottom: 1.5rem; right: 2rem;
-    font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--ink-faint); z-index: 12; opacity: 0;
-    animation: fadeIn 0.7s var(--ease) 2.2s forwards;
-    pointer-events: none; transition: opacity 0.35s;
+  .zoom-hud {
+    position: absolute; top: 0.75rem; right: 1.25rem; z-index: 12;
+    font-size: 0.55rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink-faint); pointer-events: none;
   }
-  .scroll-hint.hidden { opacity: 0 !important; }
 
-  .timeline-scroll {
+  .time-viewport {
     flex: 1 1 auto;
-    overflow-x: auto; overflow-y: hidden;
-    scroll-snap-type: x proximity;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255,255,255,0.15) transparent;
-    padding: 0 2rem;
-  }
-  .timeline-scroll::-webkit-scrollbar { height: 4px; }
-  .timeline-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
-
-  .timeline {
     position: relative;
-    height: 100%;
-    min-height: 480px;
-    /* ~680 years × ~9px */
-    width: 6200px;
-    padding: 1.25rem 0 4.5rem;
+    overflow: hidden;
+    min-height: 0;
+    cursor: grab;
   }
+  .time-viewport.dragging { cursor: grabbing; }
 
-  .saecula-band {
-    position: absolute; left: 0; right: 0; top: 0; height: 1.6rem;
-  }
-  .saeculum {
-    position: absolute; top: 0; bottom: 0;
-    border-left: 1px solid var(--line);
-    padding: 0.15rem 0.5rem 0;
-    opacity: 0;
-    animation: fadeSlideUp 0.55s var(--ease) forwards;
-  }
-  .saeculum .sname {
-    font-size: 0.55rem; letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .saeculum .syears {
-    font-size: 0.5rem; letter-spacing: 0.06em; color: var(--ink-faint);
-  }
-
-  .turnings {
-    position: absolute; left: 0; right: 0; top: 1.85rem; height: 4.4rem;
-  }
-  .turning {
-    position: absolute; top: 0; bottom: 0; opacity: 0;
-    transform: translateY(8px);
-  }
-  .turning.enter { animation: fadeSlideUp 0.55s var(--ease) forwards; }
-  .turning .band {
+  .time-canvas {
     position: absolute; inset: 0;
+  }
+
+  .tbands { position: absolute; left: 0; right: 0; top: 1.85rem; height: 4.4rem; }
+  .tband {
+    position: absolute; top: 0; bottom: 0;
     border-top: 1px solid currentColor; opacity: 0.7;
   }
-  .turning .band::after {
+  .tband::after {
     content: ""; position: absolute; inset: 0;
     background: linear-gradient(180deg, currentColor, transparent);
     opacity: 0.14;
   }
-  .turning.high { color: var(--high); }
-  .turning.awakening { color: var(--awakening); }
-  .turning.unraveling { color: var(--unraveling); }
-  .turning.crisis { color: var(--crisis); }
-  .turning.projected .band { border-top-style: dashed; opacity: 0.4; }
-  .turning .label {
-    position: absolute; left: 0.4rem; top: 0.35rem;
-    max-width: calc(100% - 0.5rem);
-  }
-  .turning .label .name {
-    font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase;
-    font-weight: 500; color: currentColor;
+  .tband.high { color: var(--high); }
+  .tband.awakening { color: var(--awakening); }
+  .tband.unraveling { color: var(--unraveling); }
+  .tband.crisis { color: var(--crisis); }
+  .tband.projected { border-top-style: dashed; opacity: 0.4; }
+  .tband .blabel {
+    position: absolute; left: 0.35rem; top: 0.3rem;
+    font-size: 0.52rem; letter-spacing: 0.1em; text-transform: uppercase;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: calc(100% - 0.5rem); color: currentColor;
   }
-  .turning .label .dates {
-    font-size: 0.5rem; letter-spacing: 0.05em; color: var(--ink-faint);
+  .tband .bdates {
+    font-size: 0.45rem; letter-spacing: 0.04em; color: var(--ink-faint);
   }
 
-  .events {
-    position: absolute; left: 0; right: 0; top: 6.5rem; height: 5.2rem;
+  .saec-row { position: absolute; left: 0; right: 0; top: 0.35rem; height: 1.4rem; }
+  .saec-chip {
+    position: absolute; top: 0;
+    font-size: 0.5rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    padding-left: 0.35rem; border-left: 1px solid var(--line);
   }
-  .event {
+
+  .ev-layer { position: absolute; left: 0; right: 0; top: 6.5rem; height: 5.6rem; }
+  .ev {
     position: absolute; transform: translateX(-50%);
-    text-align: center; cursor: default; opacity: 0;
+    text-align: center; cursor: default;
   }
-  .event.enter { animation: fadeSlideUpCentered 0.45s var(--ease) forwards; }
-  .event .etick {
+  .ev .etick {
     width: 1px; height: 12px; margin: 0 auto;
     background: var(--ink-faint);
   }
-  .event .elabel {
-    margin-top: 0.2rem;
+  .ev .elabel {
+    margin-top: 0.15rem;
     font-size: 0.5rem; letter-spacing: 0.04em;
-    color: var(--event); line-height: 1.25;
-    white-space: nowrap; max-width: 5.5rem;
+    color: var(--event); line-height: 1.2;
+    white-space: nowrap; max-width: 6.2rem;
     overflow: hidden; text-overflow: ellipsis;
   }
-  .event .eyear {
-    font-size: 0.45rem; letter-spacing: 0.06em; color: var(--ink-faint);
+  .ev .eyear {
+    font-size: 0.42rem; letter-spacing: 0.05em; color: var(--ink-faint);
   }
-  .event.lane-0 { top: 0; }
-  .event.lane-1 { top: 1.7rem; }
-  .event.lane-2 { top: 3.4rem; }
+  .ev.lane-0 { top: 0; }
+  .ev.lane-1 { top: 1.85rem; }
+  .ev.lane-2 { top: 3.7rem; }
+  .ev.dot-only .elabel, .ev.dot-only .eyear { display: none; }
+  .ev.dot-only .etick {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: rgba(255,255,255,0.55);
+    box-shadow: 0 0 6px rgba(255,255,255,0.25);
+  }
+  .ev.dot-only:hover .elabel, .ev.dot-only:hover .eyear,
+  .ev.dot-only.show-label .elabel, .ev.dot-only.show-label .eyear { display: block; }
+  .ev.dot-only:hover .etick, .ev.dot-only.show-label .etick {
+    width: 1px; height: 12px; border-radius: 0; box-shadow: none;
+  }
+  .ev.primary .elabel { color: #fff; font-weight: 500; }
 
-  .axis {
-    position: absolute; left: 0; right: 0; top: 12.2rem;
+  .axis-row {
+    position: absolute; left: 0; right: 0; top: 12.4rem;
     height: 1px; background: var(--line-strong);
-    transform-origin: left center; transform: scaleX(0);
-    animation: drawAxis 1.3s var(--ease) 0.25s forwards;
   }
-  @keyframes drawAxis { to { transform: scaleX(1); } }
+  .tick-layer { position: absolute; left: 0; right: 0; top: 12.4rem; height: 3.2rem; }
+  .ttick {
+    position: absolute; top: 0; transform: translateX(-50%);
+    text-align: center; pointer-events: none;
+  }
+  .ttick .stem { width: 1px; height: 8px; background: var(--line-strong); margin: 0 auto; }
+  .ttick.major .stem { height: 12px; background: rgba(255,255,255,0.45); }
+  .ttick .lab {
+    margin-top: 0.25rem; font-size: 0.5rem; letter-spacing: 0.06em;
+    color: var(--ink-faint); white-space: nowrap; font-variant-numeric: tabular-nums;
+  }
+  .ttick.major .lab { color: var(--ink-muted); font-size: 0.55rem; }
 
-  .ticks {
-    position: absolute; left: 0; right: 0; top: 12.2rem; height: 0;
-    pointer-events: none;
+  .now-marker {
+    position: absolute; top: 1.85rem; bottom: 2.5rem;
+    width: 2px; transform: translateX(-50%);
+    background: rgba(255,255,255,0.85);
+    z-index: 9; pointer-events: none; left: 50%;
   }
-  .tick {
-    position: absolute; top: 0; transform: translateX(-50%); opacity: 0;
+  .now-marker .now-glow {
+    position: absolute; left: 50%; top: 0; transform: translateX(-50%);
+    width: 10px; height: 10px; border-radius: 50%; background: #fff;
   }
-  .tick.visible { animation: fadeUp 0.4s var(--ease) forwards; }
-  .tick .stem { width: 1px; height: 8px; background: var(--line-strong); margin: 0 auto; }
-  .tick .yr {
-    margin-top: 0.3rem; font-size: 0.52rem; letter-spacing: 0.1em;
-    color: var(--ink-faint); text-align: center; white-space: nowrap;
+  .now-marker .now-label {
+    position: absolute; left: 50%; top: -1.15rem; transform: translateX(-50%);
+    font-size: 0.48rem; letter-spacing: 0.14em; text-transform: uppercase;
+    color: rgba(255,255,255,0.9); white-space: nowrap;
+  }
+  .now-marker .now-clock {
+    position: absolute; left: 50%; bottom: -1.35rem; transform: translateX(-50%);
+    font-size: 0.55rem; letter-spacing: 0.08em; color: var(--ink-muted);
+    white-space: nowrap; font-variant-numeric: tabular-nums;
+  }
+  .now-marker.pulse .now-glow {
+    animation: nowPulse 2.4s ease-in-out infinite;
+  }
+  @keyframes nowPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); opacity: 0.85; }
+    50% { box-shadow: 0 0 14px 4px rgba(255,255,255,0.35); opacity: 1; }
   }
 
-  /* Life-stage rows — generational diagonal */
   .stages {
-    position: absolute; left: 0; right: 0; top: 13.4rem; height: 7.6rem;
+    position: absolute; left: 0; right: 0; top: 16rem; height: 7.2rem;
   }
   .stage-row {
-    position: absolute; left: 0; right: 0; height: 1.7rem;
+    position: absolute; left: 0; right: 0; height: 1.6rem;
     border-top: 1px solid rgba(255,255,255,0.05);
   }
   .stage-row[data-stage="elder"] { top: 0; }
-  .stage-row[data-stage="midlife"] { top: 1.9rem; }
-  .stage-row[data-stage="young"] { top: 3.8rem; }
-  .stage-row[data-stage="child"] { top: 5.7rem; }
+  .stage-row[data-stage="midlife"] { top: 1.8rem; }
+  .stage-row[data-stage="young"] { top: 3.6rem; }
+  .stage-row[data-stage="child"] { top: 5.4rem; }
   .stage-label {
-    position: sticky; left: 0; z-index: 2;
-    display: inline-block; padding: 0.15rem 0.4rem;
+    position: absolute; left: 0.5rem; z-index: 2;
     font-size: 0.45rem; letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--ink-faint); background: rgba(5,5,5,0.85);
+    color: var(--ink-faint); background: rgba(5,5,5,0.85); padding: 0.1rem 0.35rem;
   }
   .gen-chip {
-    position: absolute; top: 0.25rem; height: 1.2rem;
+    position: absolute; top: 0.2rem; height: 1.15rem;
     transform: translateX(-50%);
     padding: 0 0.35rem;
-    border: 1px solid currentColor;
-    border-radius: 1px;
-    font-size: 0.48rem; letter-spacing: 0.06em; text-transform: uppercase;
+    border: 1px solid currentColor; border-radius: 1px;
+    font-size: 0.45rem; letter-spacing: 0.06em; text-transform: uppercase;
     color: inherit; background: rgba(0,0,0,0.35);
-    white-space: nowrap; cursor: default; opacity: 0;
-    display: flex; align-items: center; gap: 0.3rem;
+    white-space: nowrap; display: flex; align-items: center; gap: 0.25rem;
   }
-  .gen-chip.enter { animation: fadeSlideUpCentered 0.45s var(--ease) forwards; }
-  .gen-chip .garch { opacity: 0.7; font-size: 0.42rem; letter-spacing: 0.08em; }
+  .gen-chip .garch { opacity: 0.7; font-size: 0.4rem; }
   .gen-chip.hero { color: var(--hero); }
   .gen-chip.prophet { color: var(--prophet); }
   .gen-chip.nomad { color: var(--nomad); }
   .gen-chip.artist { color: var(--artist); }
-  .gen-chip.projected { border-style: dashed; opacity: 0.85; }
-
-  .gens-birth {
-    position: absolute; left: 0; right: 0; top: 21.4rem; height: 2.4rem;
-  }
-  .gbirth {
-    position: absolute; top: 0; height: 1.5rem;
-    border-left: 2px solid currentColor;
-    padding-left: 0.35rem;
-    opacity: 0; cursor: default;
-  }
-  .gbirth.enter { animation: fadeSlideUp 0.45s var(--ease) forwards; }
-  .gbirth.hero { color: var(--hero); }
-  .gbirth.prophet { color: var(--prophet); }
-  .gbirth.nomad { color: var(--nomad); }
-  .gbirth.artist { color: var(--artist); }
-  .gbirth.projected { border-left-style: dashed; }
-  .gbirth .gn {
-    font-size: 0.52rem; letter-spacing: 0.08em; text-transform: uppercase;
-    font-weight: 500; white-space: nowrap;
-  }
-  .gbirth .gy {
-    font-size: 0.45rem; letter-spacing: 0.04em; color: var(--ink-faint);
-    white-space: nowrap;
-  }
+  .gen-chip.projected { border-style: dashed; }
 
   .tooltip {
     position: fixed; z-index: 100; max-width: min(300px, calc(100vw - 2rem));
@@ -282,73 +256,22 @@
   }
   .tooltip .tt-body { color: var(--ink-muted); }
 
-
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateX(-50%) translateY(5px); }
-    to { opacity: 1; transform: translateX(-50%) translateY(0); }
-  }
-  @keyframes fadeSlideUp {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes fadeSlideUpCentered {
-    from { opacity: 0; transform: translateX(-50%) translateY(8px); }
-    to { opacity: 1; transform: translateX(-50%) translateY(0); }
-  }
 
-
-  .now-marker {
-    position: absolute; top: 1.85rem; bottom: 3.2rem;
-    width: 2px; transform: translateX(-50%);
-    background: rgba(255,255,255,0.75);
-    z-index: 9; pointer-events: none;
-  }
-  .now-marker .now-glow {
-    position: absolute; left: 50%; top: 0; transform: translateX(-50%);
-    width: 10px; height: 10px; border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 0 0 0 rgba(255,255,255,0.45);
-  }
-  .now-marker .now-label {
-    position: absolute; left: 50%; top: -1.15rem; transform: translateX(-50%);
-    font-size: 0.48rem; letter-spacing: 0.14em; text-transform: uppercase;
-    color: rgba(255,255,255,0.85); white-space: nowrap;
-  }
-  .now-marker.pulse .now-glow {
-    animation: nowPulse 2.4s ease-in-out infinite;
-  }
-  @keyframes nowPulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); opacity: 0.85; }
-    50% { box-shadow: 0 0 14px 4px rgba(255,255,255,0.35); opacity: 1; }
-  }
-  .timeline.zooming {
-    will-change: transform;
-  }
   @media (prefers-reduced-motion: reduce) {
     .now-marker.pulse .now-glow { animation: none; }
-    header, .chain, .scroll-hint, .saeculum, .turning, .event, .tick, .gen-chip, .gbirth, .axis {
-      animation: none !important; opacity: 1 !important; transform: none !important;
-    }
-    .turning, .event, .tick, .gen-chip, .gbirth { opacity: 1; }
+    header, .chain { animation: none !important; opacity: 1 !important; }
   }
 
   /* Mobile */
   @media (max-width: 700px) {
     html, body { height: 100%; overflow: hidden; }
-    body { overflow: hidden; }
-
     header {
       padding: 0.7rem 1rem 0.25rem;
-      flex: 0 0 auto;
-      animation: none;
-      opacity: 1;
+      animation: none; opacity: 1;
     }
     .brand h1 { font-size: 0.95rem; letter-spacing: 0.16em; }
-    .chain {
-      display: none;
-    }
-
+    .chain { display: none; }
     .desktop-stage { display: none !important; }
 
     .mobile-stage {
@@ -357,9 +280,7 @@
       flex: 1 1 auto;
       min-height: 0;
       position: relative;
-      padding: 0;
     }
-
     .tape-readout {
       flex: 0 0 auto;
       margin: 0 0.85rem 0.5rem;
@@ -367,33 +288,28 @@
       border: 1px solid var(--line-strong);
       background: rgba(10,10,10,0.92);
       z-index: 5;
-      max-height: 42vh;
+      max-height: 38vh;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
     }
     .tape-readout .ro-year {
-      font-size: 1.85rem;
-      font-weight: 500;
-      letter-spacing: 0.08em;
-      line-height: 1.1;
-      margin-bottom: 0.45rem;
-      font-variant-numeric: tabular-nums;
+      font-size: 1.85rem; font-weight: 500; letter-spacing: 0.08em;
     }
-    .tape-readout .ro-row {
-      margin-top: 0.35rem;
-      font-size: 0.68rem;
-      line-height: 1.4;
-      letter-spacing: 0.02em;
+    .tape-readout .ro-clock {
+      font-size: 0.72rem; letter-spacing: 0.08em; color: var(--ink-muted);
+      margin-top: 0.15rem; font-variant-numeric: tabular-nums;
     }
+    .tape-readout .ro-zoom {
+      font-size: 0.55rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--ink-faint); margin-top: 0.2rem;
+    }
+    .tape-readout .ro-row { margin-top: 0.55rem; }
     .tape-readout .ro-kicker {
-      font-size: 0.5rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--ink-faint);
-      margin-bottom: 0.1rem;
+      font-size: 0.5rem; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--ink-faint); margin-bottom: 0.15rem;
     }
-    .tape-readout .ro-main { color: var(--ink); }
-    .tape-readout .ro-sub { color: var(--ink-muted); }
+    .tape-readout .ro-main { color: var(--ink); font-size: 0.85rem; }
+    .tape-readout .ro-sub { color: var(--ink-muted); font-size: 0.7rem; }
     .tape-readout .ro-turning.high .ro-main { color: var(--high); }
     .tape-readout .ro-turning.awakening .ro-main { color: var(--awakening); }
     .tape-readout .ro-turning.unraveling .ro-main { color: var(--unraveling); }
@@ -402,172 +318,82 @@
     .tape-readout .ro-gen.prophet { color: var(--prophet); }
     .tape-readout .ro-gen.nomad { color: var(--nomad); }
     .tape-readout .ro-gen.artist { color: var(--artist); }
-    .tape-readout .ro-living {
-      display: flex; flex-direction: column; gap: 0.2rem;
-      margin-top: 0.15rem;
-    }
+    .tape-readout .ro-living { display: flex; flex-direction: column; gap: 0.2rem; }
     .tape-readout .ro-living-item {
       display: flex; justify-content: space-between; gap: 0.5rem;
-      font-size: 0.62rem; line-height: 1.35;
+      font-size: 0.72rem;
     }
-    .tape-readout .ro-living-item .name { letter-spacing: 0.04em; }
     .tape-readout .ro-living-item .meta { color: var(--ink-muted); text-align: right; }
-    .tape-readout .ro-event { color: var(--event); }
+    .tape-readout .ro-event { color: var(--event); font-size: 0.75rem; }
     .tape-readout .ro-empty { color: var(--ink-faint); font-size: 0.62rem; }
 
     .tape-viewport {
-      flex: 1 1 auto;
-      min-height: 0;
-      position: relative;
-      overflow: hidden;
+      flex: 1 1 auto; min-height: 0; position: relative;
+      touch-action: none; overflow: hidden;
     }
     .tape-cursor {
-      position: absolute;
-      left: 0; right: 0;
-      top: 50%;
-      height: 0;
-      z-index: 4;
-      pointer-events: none;
+      position: absolute; left: 0; right: 0; top: 50%;
+      transform: translateY(-50%); z-index: 4; pointer-events: none;
+      display: flex; align-items: center; gap: 0.35rem;
+      padding-left: 0.35rem;
     }
     .tape-cursor::before {
-      content: "";
-      position: absolute;
-      left: 0; right: 0;
-      top: -0.5px;
-      height: 1px;
-      background: rgba(255,255,255,0.85);
-      box-shadow: 0 0 12px rgba(255,255,255,0.25);
+      content: ""; flex: 1; height: 1px; background: rgba(255,255,255,0.85);
     }
     .tape-cursor .cursor-year {
-      position: absolute;
-      left: 0.75rem;
-      top: -1.35rem;
-      font-size: 1.35rem;
-      font-weight: 500;
-      letter-spacing: 0.1em;
-      font-variant-numeric: tabular-nums;
-      color: var(--ink);
-      text-shadow: 0 0 18px rgba(0,0,0,0.9);
+      font-size: 0.85rem; letter-spacing: 0.08em; font-variant-numeric: tabular-nums;
+      min-width: 4.5rem;
     }
+    .tape-cursor .cursor-notch {
+      width: 8px; height: 8px; border-radius: 1px; background: #fff;
+      transform: rotate(45deg); margin-right: 0.5rem;
+    }
+    .tape-cursor.pulse .cursor-notch { animation: nowPulse 2.4s ease-in-out infinite; }
 
-    .tape-cursor.pulse .cursor-notch {
-      animation: nowPulse 2.4s ease-in-out infinite;
+    .m-canvas { position: absolute; inset: 0; }
+    .m-band {
+      position: absolute; left: 0.85rem; width: 0.55rem;
+      border-radius: 1px; opacity: 0.55;
     }
+    .m-band.high { background: var(--high); }
+    .m-band.awakening { background: var(--awakening); }
+    .m-band.unraveling { background: var(--unraveling); }
+    .m-band.crisis { background: var(--crisis); }
+    .m-band.projected { opacity: 0.22; }
+    .m-rail {
+      position: absolute; left: 1.7rem; width: 1px; top: 0; bottom: 0;
+      background: var(--line-strong);
+    }
+    .m-tick {
+      position: absolute; left: 1.1rem; right: 0.5rem;
+      height: 0; pointer-events: none;
+    }
+    .m-tick .mark {
+      position: absolute; left: 0.6rem; width: 10px; height: 1px;
+      background: rgba(255,255,255,0.25); transform: translateY(-0.5px);
+    }
+    .m-tick.major .mark { width: 18px; background: rgba(255,255,255,0.65); }
+    .m-tick .ylab {
+      position: absolute; left: 2.1rem; top: 0; transform: translateY(-50%);
+      font-size: 0.62rem; letter-spacing: 0.06em; color: var(--ink-muted);
+      font-variant-numeric: tabular-nums; white-space: nowrap;
+    }
+    .m-ev {
+      position: absolute; left: 3.4rem; right: 0.6rem;
+      transform: translateY(-50%);
+      font-size: 0.58rem; letter-spacing: 0.03em; color: var(--event);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .m-ev.dot-only {
+      left: 1.45rem; width: 6px; height: 6px; border-radius: 50%;
+      background: #fff; right: auto; font-size: 0; padding: 0;
+    }
+    .tooltip { display: none !important; }
     @media (prefers-reduced-motion: reduce) {
       .tape-cursor.pulse .cursor-notch { animation: none; }
     }
-    .tape-cursor .cursor-notch {
-      position: absolute;
-      right: 0.65rem;
-      top: -5px;
-      width: 10px; height: 10px;
-      border: 1px solid var(--ink);
-      transform: rotate(45deg);
-      background: var(--bg);
-    }
-
-    .tape-scroll {
-      height: 100%;
-      overflow-y: auto;
-      overflow-x: hidden;
-      -webkit-overflow-scrolling: touch;
-      scroll-snap-type: y mandatory;
-      scrollbar-width: none;
-    }
-    .tape-scroll::-webkit-scrollbar { display: none; }
-
-    .tape {
-      position: relative;
-      width: 100%;
-      /* height set in JS: pad + years * pxPerYear + pad */
-    }
-    .tape-pad {
-      height: 50%; /* set precisely in JS to half viewport */
-    }
-    .tape-bands {
-      position: absolute;
-      left: 1.1rem;
-      width: 1.35rem;
-      top: 0; bottom: 0;
-      pointer-events: none;
-    }
-    .tape-band {
-      position: absolute;
-      left: 0; right: 0;
-      opacity: 0.35;
-    }
-    .tape-band.high { background: var(--high); }
-    .tape-band.awakening { background: var(--awakening); }
-    .tape-band.unraveling { background: var(--unraveling); }
-    .tape-band.crisis { background: var(--crisis); }
-    .tape-band.projected { opacity: 0.18; }
-
-    .tape-rail {
-      position: absolute;
-      left: 1.7rem;
-      width: 1px;
-      top: 0; bottom: 0;
-      background: var(--line-strong);
-      pointer-events: none;
-    }
-
-    .tape-ticks {
-      position: relative;
-      margin-left: 1.1rem;
-    }
-    .tape-tick {
-      position: absolute;
-      left: 0;
-      height: 0;
-      width: 100%;
-      scroll-snap-align: center;
-    }
-    .tape-tick .mark {
-      position: absolute;
-      left: 0.6rem;
-      top: 0;
-      height: 1px;
-      width: 8px;
-      background: rgba(255,255,255,0.22);
-      transform: translateY(-0.5px);
-    }
-    .tape-tick.y5 .mark {
-      width: 14px;
-      background: rgba(255,255,255,0.4);
-    }
-    .tape-tick.y10 .mark {
-      width: 22px;
-      background: rgba(255,255,255,0.7);
-    }
-    .tape-tick.y10 .ylab {
-      position: absolute;
-      left: 2.15rem;
-      top: 0;
-      transform: translateY(-50%);
-      font-size: 0.62rem;
-      letter-spacing: 0.08em;
-      color: var(--ink-muted);
-      font-variant-numeric: tabular-nums;
-    }
-    .tape-tick.has-event .mark {
-      background: #fff;
-      box-shadow: 0 0 6px rgba(255,255,255,0.35);
-    }
-    .tape-tick .evdot {
-      position: absolute;
-      left: 0.35rem;
-      top: -2px;
-      width: 5px; height: 5px;
-      background: var(--ink);
-      border-radius: 50%;
-    }
-
-    .tooltip { display: none !important; }
-
-    @media (prefers-reduced-motion: reduce) {
-      .tape-scroll { scroll-snap-type: y proximity; scroll-behavior: auto; }
-    }
   }
+
 </style>
 </head>
 <body>
@@ -583,21 +409,25 @@
 <div class="desktop-stage" id="desktopStage">
   <div class="edge-fade left" aria-hidden="true"></div>
   <div class="edge-fade right" aria-hidden="true"></div>
-  <div class="scroll-hint" id="scrollHint">›› Scroll · span 1435–2110s</div>
-  <div class="timeline-scroll" id="scroller" tabindex="0" aria-label="Historical timeline">
-    <div class="timeline" id="timeline">
-      <div class="saecula-band" id="saecula"></div>
-      <div class="turnings" id="turnings"></div>
-      <div class="events" id="events"></div>
-      <div class="axis"></div>
-      <div class="ticks" id="ticks"></div>
+  <div class="zoom-hud" id="zoomHud">Zoom · decades</div>
+  <div class="time-viewport" id="timeViewport" tabindex="0" aria-label="Historical timeline">
+    <div class="time-canvas" id="timeCanvas">
+      <div class="saec-row" id="saecRow"></div>
+      <div class="tbands" id="tBands"></div>
+      <div class="ev-layer" id="evLayer"></div>
+      <div class="axis-row"></div>
+      <div class="tick-layer" id="tickLayer"></div>
       <div class="stages" id="stages">
         <div class="stage-row" data-stage="elder"><span class="stage-label">Elder</span></div>
         <div class="stage-row" data-stage="midlife"><span class="stage-label">Midlife</span></div>
         <div class="stage-row" data-stage="young"><span class="stage-label">Young adult</span></div>
         <div class="stage-row" data-stage="child"><span class="stage-label">Childhood</span></div>
       </div>
-      <div class="gens-birth" id="gensBirth"></div>
+      <div class="now-marker pulse" id="nowMarker" aria-hidden="true">
+        <div class="now-label">Now</div>
+        <div class="now-glow"></div>
+        <div class="now-clock" id="nowClock">—</div>
+      </div>
     </div>
   </div>
 </div>
@@ -605,6 +435,8 @@
 <div class="mobile-stage" id="mobileStage" aria-label="Year tape timeline">
   <div class="tape-readout" id="tapeReadout" aria-live="polite">
     <div class="ro-year" id="roYear">—</div>
+    <div class="ro-clock" id="roClock">—</div>
+    <div class="ro-zoom" id="roZoom">Zoom · years</div>
     <div class="ro-row ro-saec">
       <div class="ro-kicker">Saeculum</div>
       <div class="ro-main" id="roSaec">—</div>
@@ -628,25 +460,22 @@
     </div>
   </div>
   <div class="tape-viewport" id="tapeViewport">
-    <div class="tape-cursor" aria-hidden="true">
+    <div class="tape-cursor pulse" aria-hidden="true">
       <div class="cursor-year" id="cursorYear">—</div>
       <div class="cursor-notch"></div>
     </div>
-    <div class="tape-scroll" id="tapeScroll" tabindex="0">
-      <div class="tape" id="tape">
-        <div class="tape-pad" id="tapePadTop"></div>
-        <div class="tape-bands" id="tapeBands"></div>
-        <div class="tape-rail" aria-hidden="true"></div>
-        <div class="tape-ticks" id="tapeTicks"></div>
-        <div class="tape-pad" id="tapePadBottom"></div>
-      </div>
+    <div class="m-canvas" id="mCanvas">
+      <div class="m-rail" aria-hidden="true"></div>
+      <div id="mBands"></div>
+      <div id="mTicks"></div>
+      <div id="mEvs"></div>
     </div>
   </div>
 </div>
-
 <div class="tooltip" id="tooltip" role="tooltip"></div>
 
 <script>
+
 (function () {
   "use strict";
 
@@ -655,10 +484,6 @@
 
   var reducedMotion = false;
   try { reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (eRM) {}
-  var _nowDate = new Date();
-  var nowYear = _nowDate.getFullYear() + ((_nowDate.getMonth() * 30.437 + _nowDate.getDate()) / 365.25);
-  if (nowYear < YEAR_START) nowYear = YEAR_START;
-  if (nowYear > YEAR_END) nowYear = YEAR_END;
 
 
   var TURNING_COPY = {
@@ -755,57 +580,47 @@
 
   // Events — dates verified against Grokipedia pages (static baseline; live merge may add recent)
   var events = [
-    { label: "Castillon", year: 1453, detail: "Battle of Castillon, 17 July 1453 — effective end of the Hundred Years' War (Grokipedia).", source: "https://grokipedia.com/page/Battle_of_Castillon" },
-    { label: "Wars of the Roses", year: 1455, end: 1487, detail: "Dynastic civil wars in England, 1455–1487 (Grokipedia).", source: "https://grokipedia.com/page/Wars_of_the_Roses" },
-    { label: "Bosworth", year: 1485, detail: "Battle of Bosworth Field, 22 August 1485 — Richard III killed; Henry VII begins Tudor rule (Grokipedia).", source: "https://grokipedia.com/page/Wars_of_the_Roses" },
-    { label: "Cabot voyage", year: 1497, detail: "John Cabot reaches the North American mainland in 1497 for Henry VII (Grokipedia).", source: "https://grokipedia.com/page/John_Cabot" },
-    { label: "Reformation", year: 1517, detail: "Martin Luther's Ninety-five Theses, 31 October 1517 — spark of the Protestant Reformation (Grokipedia).", source: "https://grokipedia.com/page/Protestant_Reformation" },
-    { label: "Dissolution", year: 1536, end: 1541, detail: "Dissolution of the monasteries under Henry VIII, 1536–1541 (Grokipedia).", source: "https://grokipedia.com/page/Dissolution_of_the_monasteries" },
-    { label: "Elizabeth I", year: 1558, detail: "Elizabeth I becomes Queen of England and Ireland, 17 November 1558 (Grokipedia).", source: "https://grokipedia.com/page/Elizabeth_I" },
-    { label: "Armada", year: 1588, detail: "Spanish Armada campaign of 1588 against England (Grokipedia).", source: "https://grokipedia.com/page/Spanish_Armada" },
-    { label: "Mayflower", year: 1620, detail: "Mayflower voyage to North America, 1620 (Grokipedia).", source: "https://grokipedia.com/page/Mayflower" },
-    { label: "English Civil War", year: 1642, end: 1651, detail: "English Civil War, beginning 1642 (Grokipedia).", source: "https://grokipedia.com/page/English_Civil_War" },
-    { label: "Restoration", year: 1660, detail: "Stuart Restoration — Charles II restored, 1660 (Grokipedia).", source: "https://grokipedia.com/page/Stuart_Restoration" },
-    { label: "Great Fire", year: 1666, detail: "Great Fire of London, 2–6 September 1666 (Grokipedia).", source: "https://grokipedia.com/page/Great_Fire_of_London" },
-    { label: "Glorious Revolution", year: 1688, detail: "Glorious Revolution of 1688–1689 — James II overthrown (Grokipedia).", source: "https://grokipedia.com/page/Glorious_Revolution" },
-    { label: "Act of Union", year: 1707, detail: "Acts of Union create the Kingdom of Great Britain, 1707 (Grokipedia).", source: "https://grokipedia.com/page/Treaty_of_Union" },
-    { label: "South Sea Bubble", year: 1720, detail: "South Sea Bubble speculative crisis in Great Britain, 1720 (Grokipedia).", source: "https://grokipedia.com/page/the_south_sea_bubble" },
-    { label: "Great Awakening", year: 1734, end: 1745, detail: "First Great Awakening Protestant revivals in the British American colonies, 1730s–1740s (Grokipedia).", source: "https://grokipedia.com/page/First_Great_Awakening" },
-    { label: "French & Indian War", year: 1754, end: 1763, detail: "French and Indian War, 1754–1763 (Grokipedia).", source: "https://grokipedia.com/page/French_and_Indian_War" },
-    { label: "Boston Tea Party", year: 1773, detail: "Boston Tea Party, 16 December 1773 (Grokipedia).", source: "https://grokipedia.com/page/Boston_Tea_Party" },
-    { label: "Declaration", year: 1776, detail: "U.S. Declaration of Independence adopted 4 July 1776 (Grokipedia).", source: "https://grokipedia.com/page/United_States_Declaration_of_Independence" },
-    { label: "Louisiana Purchase", year: 1803, detail: "Louisiana Purchase agreement, 1803 (Grokipedia).", source: "https://grokipedia.com/page/Louisiana_Purchase" },
-    { label: "Nat Turner", year: 1831, detail: "Nat Turner's Rebellion, Southampton County, Virginia, 21–23 August 1831 (Grokipedia).", source: "https://grokipedia.com/page/Nat_Turner%27s_slave_rebellion" },
-    { label: "Mexican–American War", year: 1846, end: 1848, detail: "Mexican–American War, April 1846 – February 1848 (Grokipedia).", source: "https://grokipedia.com/page/Mexican%E2%80%93American_War" },
-    { label: "U.S. Civil War", year: 1861, end: 1865, detail: "American Civil War; Confederacy formed 1861 (Grokipedia).", source: "https://grokipedia.com/page/American_Civil_War" },
-    { label: "Transcontinental RR", year: 1869, detail: "First U.S. transcontinental railroad completed, 1869 (Grokipedia).", source: "https://grokipedia.com/page/Transcontinental_railroad" },
-    { label: "Spanish–American War", year: 1898, detail: "Spanish–American War, April–August 1898 (Grokipedia).", source: "https://grokipedia.com/page/Spanish%E2%80%93American_War" },
-    { label: "Wright Flyer", year: 1903, detail: "Wright brothers' first powered flight, 17 December 1903 near Kitty Hawk (Grokipedia).", source: "https://grokipedia.com/page/Wright_brothers" },
-    { label: "WW1", year: 1914, end: 1918, detail: "World War I, 1914–1918 (Grokipedia).", source: "https://grokipedia.com/page/World_War_I" },
-    { label: "Spanish flu", year: 1918, end: 1920, detail: "1918–1920 influenza pandemic (Spanish flu) (Grokipedia).", source: "https://grokipedia.com/page/Spanish_flu" },
-    { label: "1929 Crash", year: 1929, detail: "Wall Street Crash of 1929, late October 1929 (Grokipedia).", source: "https://grokipedia.com/page/Wall_Street_Crash_of_1929" },
-    { label: "WW2", year: 1939, end: 1945, detail: "World War II, 1 September 1939 – 2 September 1945 (Grokipedia).", source: "https://grokipedia.com/page/World_War_II" },
-    { label: "JFK", year: 1963, detail: "Assassination of John F. Kennedy, 22 November 1963 (Grokipedia).", source: "https://grokipedia.com/page/Assassination_of_John_F._Kennedy" },
-    { label: "Moon landing", year: 1969, detail: "Apollo 11 lunar landing, 20 July 1969 (Grokipedia).", source: "https://grokipedia.com/page/Apollo_11" },
-    { label: "Oil crisis", year: 1973, detail: "1973 oil crisis; prices roughly quadrupled into 1974 (Grokipedia).", source: "https://grokipedia.com/page/1973_oil_crisis" },
-    { label: "Berlin Wall", year: 1989, detail: "Fall of the Berlin Wall, 9 November 1989 (Grokipedia).", source: "https://grokipedia.com/page/Fall_of_the_Berlin_Wall" },
-    { label: "WWW", year: 1989, detail: "World Wide Web invented by Tim Berners-Lee, 1989 (Grokipedia).", source: "https://grokipedia.com/page/World_Wide_Web" },
-    { label: "9/11", year: 2001, detail: "September 11 attacks, 2001 (Grokipedia).", source: "https://grokipedia.com/page/September_11_attacks" },
-    { label: "2008 crash", year: 2008, detail: "2008 financial crisis / Great Recession onset (Grokipedia).", source: "https://grokipedia.com/page/Great_Recession" },
-    { label: "Covid", year: 2020, detail: "COVID-19 pandemic; SARS-CoV-2 emerged late 2019, global 2020 (Grokipedia).", source: "https://grokipedia.com/page/COVID-19_pandemic" }
+    { label: "Castillon", year: 1453, detail: "Battle of Castillon, 17 July 1453 — effective end of the Hundred Years' War (Grokipedia).", source: "https://grokipedia.com/page/Battle_of_Castillon", kind: "war", weight: 8 },
+    { label: "Wars of the Roses", year: 1455, end: 1487, detail: "Dynastic civil wars in England, 1455–1487 (Grokipedia).", source: "https://grokipedia.com/page/Wars_of_the_Roses", kind: "war", weight: 7 },
+    { label: "Bosworth", year: 1485, detail: "Battle of Bosworth Field, 22 August 1485 — Richard III killed; Henry VII begins Tudor rule (Grokipedia).", source: "https://grokipedia.com/page/Wars_of_the_Roses", kind: "war", weight: 9 },
+    { label: "Cabot voyage", year: 1497, detail: "John Cabot reaches the North American mainland in 1497 for Henry VII (Grokipedia).", source: "https://grokipedia.com/page/John_Cabot", kind: "explore", weight: 7 },
+    { label: "Reformation", year: 1517, detail: "Martin Luther's Ninety-five Theses, 31 October 1517 — spark of the Protestant Reformation (Grokipedia).", source: "https://grokipedia.com/page/Protestant_Reformation", kind: "religion", weight: 10 },
+    { label: "Dissolution", year: 1536, end: 1541, detail: "Dissolution of the monasteries under Henry VIII, 1536–1541 (Grokipedia).", source: "https://grokipedia.com/page/Dissolution_of_the_monasteries", kind: "religion", weight: 7 },
+    { label: "Elizabeth I", year: 1558, detail: "Elizabeth I becomes Queen of England and Ireland, 17 November 1558 (Grokipedia).", source: "https://grokipedia.com/page/Elizabeth_I", kind: "politics", weight: 8 },
+    { label: "Armada", year: 1588, detail: "Spanish Armada campaign of 1588 against England (Grokipedia).", source: "https://grokipedia.com/page/Spanish_Armada", kind: "war", weight: 9 },
+    { label: "Mayflower", year: 1620, detail: "Mayflower voyage to North America, 1620 (Grokipedia).", source: "https://grokipedia.com/page/Mayflower", kind: "explore", weight: 8 },
+    { label: "English Civil War", year: 1642, end: 1651, detail: "English Civil War, beginning 1642 (Grokipedia).", source: "https://grokipedia.com/page/English_Civil_War", kind: "war", weight: 9 },
+    { label: "Restoration", year: 1660, detail: "Stuart Restoration — Charles II restored, 1660 (Grokipedia).", source: "https://grokipedia.com/page/Stuart_Restoration", kind: "politics", weight: 8 },
+    { label: "Great Fire", year: 1666, detail: "Great Fire of London, 2–6 September 1666 (Grokipedia).", source: "https://grokipedia.com/page/Great_Fire_of_London", kind: "disaster", weight: 7 },
+    { label: "Glorious Revolution", year: 1688, detail: "Glorious Revolution of 1688–1689 — James II overthrown (Grokipedia).", source: "https://grokipedia.com/page/Glorious_Revolution", kind: "politics", weight: 9 },
+    { label: "Act of Union", year: 1707, detail: "Acts of Union create the Kingdom of Great Britain, 1707 (Grokipedia).", source: "https://grokipedia.com/page/Treaty_of_Union", kind: "politics", weight: 8 },
+    { label: "South Sea Bubble", year: 1720, detail: "South Sea Bubble speculative crisis in Great Britain, 1720 (Grokipedia).", source: "https://grokipedia.com/page/the_south_sea_bubble", kind: "economy", weight: 7 },
+    { label: "Great Awakening", year: 1734, end: 1745, detail: "First Great Awakening Protestant revivals in the British American colonies, 1730s–1740s (Grokipedia).", source: "https://grokipedia.com/page/First_Great_Awakening", kind: "religion", weight: 8 },
+    { label: "French & Indian War", year: 1754, end: 1763, detail: "French and Indian War, 1754–1763 (Grokipedia).", source: "https://grokipedia.com/page/French_and_Indian_War", kind: "war", weight: 8 },
+    { label: "Boston Tea Party", year: 1773, detail: "Boston Tea Party, 16 December 1773 (Grokipedia).", source: "https://grokipedia.com/page/Boston_Tea_Party", kind: "politics", weight: 8 },
+    { label: "Declaration", year: 1776, detail: "U.S. Declaration of Independence adopted 4 July 1776 (Grokipedia).", source: "https://grokipedia.com/page/United_States_Declaration_of_Independence", kind: "politics", weight: 10 },
+    { label: "Louisiana Purchase", year: 1803, detail: "Louisiana Purchase agreement, 1803 (Grokipedia).", source: "https://grokipedia.com/page/Louisiana_Purchase", kind: "politics", weight: 7 },
+    { label: "Nat Turner", year: 1831, detail: "Nat Turner's Rebellion, Southampton County, Virginia, 21–23 August 1831 (Grokipedia).", source: "https://grokipedia.com/page/Nat_Turner%27s_slave_rebellion", kind: "social", weight: 7 },
+    { label: "Mexican–American War", year: 1846, end: 1848, detail: "Mexican–American War, April 1846 – February 1848 (Grokipedia).", source: "https://grokipedia.com/page/Mexican%E2%80%93American_War", kind: "war", weight: 8 },
+    { label: "U.S. Civil War", year: 1861, end: 1865, detail: "American Civil War; Confederacy formed 1861 (Grokipedia).", source: "https://grokipedia.com/page/American_Civil_War", kind: "war", weight: 10 },
+    { label: "Transcontinental RR", year: 1869, detail: "First U.S. transcontinental railroad completed, 1869 (Grokipedia).", source: "https://grokipedia.com/page/Transcontinental_railroad", kind: "tech", weight: 8 },
+    { label: "Spanish–American War", year: 1898, detail: "Spanish–American War, April–August 1898 (Grokipedia).", source: "https://grokipedia.com/page/Spanish%E2%80%93American_War", kind: "war", weight: 7 },
+    { label: "Wright Flyer", year: 1903, detail: "Wright brothers' first powered flight, 17 December 1903 near Kitty Hawk (Grokipedia).", source: "https://grokipedia.com/page/Wright_brothers", kind: "tech", weight: 9 },
+    { label: "WW1", year: 1914, end: 1918, detail: "World War I, 1914–1918 (Grokipedia).", source: "https://grokipedia.com/page/World_War_I", kind: "war", weight: 10 },
+    { label: "Spanish flu", year: 1918, end: 1920, detail: "1918–1920 influenza pandemic (Spanish flu) (Grokipedia).", source: "https://grokipedia.com/page/Spanish_flu", kind: "disaster", weight: 8 },
+    { label: "1929 Crash", year: 1929, detail: "Wall Street Crash of 1929, late October 1929 (Grokipedia).", source: "https://grokipedia.com/page/Wall_Street_Crash_of_1929", kind: "economy", weight: 9 },
+    { label: "WW2", year: 1939, end: 1945, detail: "World War II, 1 September 1939 – 2 September 1945 (Grokipedia).", source: "https://grokipedia.com/page/World_War_II", kind: "war", weight: 10 },
+    { label: "JFK", year: 1963, detail: "Assassination of John F. Kennedy, 22 November 1963 (Grokipedia).", source: "https://grokipedia.com/page/Assassination_of_John_F._Kennedy", kind: "politics", weight: 8 },
+    { label: "Moon landing", year: 1969, detail: "Apollo 11 lunar landing, 20 July 1969 (Grokipedia).", source: "https://grokipedia.com/page/Apollo_11", kind: "tech", weight: 10 },
+    { label: "Oil crisis", year: 1973, detail: "1973 oil crisis; prices roughly quadrupled into 1974 (Grokipedia).", source: "https://grokipedia.com/page/1973_oil_crisis", kind: "economy", weight: 7 },
+    { label: "Berlin Wall", year: 1989, detail: "Fall of the Berlin Wall, 9 November 1989 (Grokipedia).", source: "https://grokipedia.com/page/Fall_of_the_Berlin_Wall", kind: "politics", weight: 9 },
+    { label: "WWW", year: 1989, detail: "World Wide Web invented by Tim Berners-Lee, 1989 (Grokipedia).", source: "https://grokipedia.com/page/World_Wide_Web", kind: "tech", weight: 9 },
+    { label: "9/11", year: 2001, detail: "September 11 attacks, 2001 (Grokipedia).", source: "https://grokipedia.com/page/September_11_attacks", kind: "war", weight: 10 },
+    { label: "2008 crash", year: 2008, detail: "2008 financial crisis / Great Recession onset (Grokipedia).", source: "https://grokipedia.com/page/Great_Recession", kind: "economy", weight: 9 },
+    { label: "Covid", year: 2020, detail: "COVID-19 pandemic; SARS-CoV-2 emerged late 2019, global 2020 (Grokipedia).", source: "https://grokipedia.com/page/COVID-19_pandemic", kind: "disaster", weight: 10 }
   ];
 
 
-  var yearTicks = [];
-  for (var y = 1450; y <= 2100; y += 50) yearTicks.push(y);
-  yearTicks.push(1435, 2115);
-
-  function pct(year) {
-    return ((year - YEAR_START) / (YEAR_END - YEAR_START)) * 100;
-  }
-  function widthPct(a, b) {
-    return ((b - a) / (YEAR_END - YEAR_START)) * 100;
-  }
   function esc(s) {
     return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
@@ -813,168 +628,339 @@
     return a.charAt(0).toUpperCase() + a.slice(1);
   }
 
-  // Stagger event lanes greedily by proximity
-  function assignLanes(list) {
-    var last = [-9999, -9999, -9999];
-    var minGap = 8; // years
-    list.forEach(function (ev) {
-      var best = 0, bestScore = 1e9;
+
+
+  var MS_YEAR = 365.25 * 24 * 3600 * 1000;
+  var MS_DAY = 24 * 3600 * 1000;
+  var MS_HOUR = 3600 * 1000;
+  var MS_MIN = 60 * 1000;
+  var MS_SEC = 1000;
+
+  function yearToMs(year) {
+    var y = Math.floor(year);
+    var frac = year - y;
+    var base = Date.UTC(y, 0, 1);
+    return base + frac * MS_YEAR;
+  }
+  function msToYear(ms) {
+    var d = new Date(ms);
+    var y = d.getUTCFullYear();
+    var start = Date.UTC(y, 0, 1);
+    var end = Date.UTC(y + 1, 0, 1);
+    return y + (ms - start) / (end - start);
+  }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+  var SPAN_MIN = 12 * MS_SEC;          // deep zoom: ~12 seconds visible
+  var SPAN_MAX = (YEAR_END - YEAR_START) * MS_YEAR;
+  var SPAN_SETTLE = reducedMotion ? (40 * MS_YEAR) : SPAN_MIN;
+  var SPAN_OVERVIEW = SPAN_MAX;
+
+  // log-space zoom for smooth feel across orders of magnitude
+  function spanToZoom(span) { return Math.log(span); }
+  function zoomToSpan(z) { return Math.exp(z); }
+  var Z_MIN = spanToZoom(SPAN_MIN);
+  var Z_MAX = spanToZoom(SPAN_MAX);
+  var Z_SETTLE = spanToZoom(SPAN_SETTLE);
+
+  var zoom = reducedMotion ? Z_SETTLE : Z_MAX; // start zoomed out
+  var zoomTarget = Z_SETTLE;
+  var scrollEnergy = 0; // drives temporary zoom-out
+  var lastFrame = performance.now();
+  var introT0 = performance.now();
+  var introDur = reducedMotion ? 0 : 2800;
+  var introDone = reducedMotion;
+
+  var holdSpan = null; // test/debug override
+  function currentSpan() {
+    if (holdSpan != null) return holdSpan;
+    // energy pushes toward overview (ease-in-out curve so mid flings land mid-zoom)
+    var e = clamp(scrollEnergy, 0, 1);
+    var eased = e * e * (3 - 2 * e);
+    var zBusy = lerp(zoomTarget, Z_MAX, eased);
+    // during intro, ease from overview to settle
+    if (!introDone) {
+      var p = clamp((performance.now() - introT0) / introDur, 0, 1);
+      var zIntro = lerp(Z_MAX, Z_SETTLE, easeOutCubic(p));
+      if (p >= 1) { introDone = true; zoom = Z_SETTLE; zoomTarget = Z_SETTLE; }
+      return zoomToSpan(zIntro);
+    }
+    zoom += (zBusy - zoom) * 0.18;
+    return zoomToSpan(zoom);
+  }
+
+  function zoomLabel(span) {
+    if (span < 90 * MS_SEC) return "seconds";
+    if (span < 90 * MS_MIN) return "minutes";
+    if (span < 48 * MS_HOUR) return "hours";
+    if (span < 90 * MS_DAY) return "days";
+    if (span < 24 * 30 * MS_DAY) return "months";
+    if (span < 20 * MS_YEAR) return "years";
+    if (span < 120 * MS_YEAR) return "decades";
+    return "centuries";
+  }
+
+  function pickTickStep(span) {
+    var steps = [
+      { unit: "second", ms: MS_SEC, majorEvery: 10 },
+      { unit: "second", ms: 5 * MS_SEC, majorEvery: 6 },
+      { unit: "second", ms: 15 * MS_SEC, majorEvery: 4 },
+      { unit: "minute", ms: MS_MIN, majorEvery: 5 },
+      { unit: "minute", ms: 5 * MS_MIN, majorEvery: 6 },
+      { unit: "minute", ms: 15 * MS_MIN, majorEvery: 4 },
+      { unit: "hour", ms: MS_HOUR, majorEvery: 6 },
+      { unit: "hour", ms: 6 * MS_HOUR, majorEvery: 4 },
+      { unit: "day", ms: MS_DAY, majorEvery: 7 },
+      { unit: "day", ms: 7 * MS_DAY, majorEvery: 4 },
+      { unit: "month", ms: 30.437 * MS_DAY, majorEvery: 3 },
+      { unit: "month", ms: 91.31 * MS_DAY, majorEvery: 4 },
+      { unit: "year", ms: MS_YEAR, majorEvery: 5 },
+      { unit: "year", ms: 5 * MS_YEAR, majorEvery: 2 },
+      { unit: "year", ms: 10 * MS_YEAR, majorEvery: 5 },
+      { unit: "year", ms: 50 * MS_YEAR, majorEvery: 2 }
+    ];
+    var target = span / 8;
+    var best = steps[0], bestDiff = Infinity;
+    for (var i = 0; i < steps.length; i++) {
+      var d = Math.abs(Math.log(steps[i].ms) - Math.log(target));
+      if (d < bestDiff) { bestDiff = d; best = steps[i]; }
+    }
+    return best;
+  }
+
+  function formatTick(ms, unit, major) {
+    var d = new Date(ms);
+    function pad(n) { return n < 10 ? "0" + n : String(n); }
+    if (unit === "second") return pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+    if (unit === "minute") return pad(d.getHours()) + ":" + pad(d.getMinutes());
+    if (unit === "hour") return pad(d.getHours()) + ":00";
+    if (unit === "day") return d.getDate() + " " + ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()];
+    if (unit === "month") return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()] + " " + d.getFullYear();
+    if (major) return String(d.getFullYear());
+    return String(d.getFullYear());
+  }
+
+  function formatClock(ms) {
+    var d = new Date(ms);
+    function pad(n) { return n < 10 ? "0" + n : String(n); }
+    return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()) +
+      " " + pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+  }
+
+  // --- Event thinning ---
+  function eventsInTurning(t) {
+    return events.filter(function (ev) { return ev.year >= t.start && ev.year < t.end; });
+  }
+
+  function selectVisibleEvents(span, viewportPx) {
+    // At deep zoom (< ~2 years) hide historical labels (they're off-screen anyway mostly)
+    var yearsVisible = span / MS_YEAR;
+    // Wider view → allow tighter gaps so ~1 label/turning stays readable
+    var minLabelGapPx = yearsVisible > 300 ? 38 : (yearsVisible > 80 ? 52 : (yearsVisible > 15 ? 64 : 72));
+    var maxLabels = yearsVisible < 5 ? 3 : (yearsVisible < 40 ? 12 : (yearsVisible < 150 ? 20 : 28));
+
+    // Prefer one primary per turning, then variety fillers with spacing
+    var candidates = events.slice().sort(function (a, b) {
+      return (b.weight || 0) - (a.weight || 0) || a.year - b.year;
+    });
+
+    var chosen = [];
+    var usedKinds = {};
+    var turningHas = {};
+
+    function fits(ev) {
+      for (var i = 0; i < chosen.length; i++) {
+        var dy = Math.abs(ev.year - chosen[i].year);
+        var gapPx = (dy * MS_YEAR / span) * viewportPx;
+        if (gapPx < minLabelGapPx) return false;
+      }
+      return true;
+    }
+
+    // Pass 1: most significant per turning (variety of kinds across chart)
+    turnings.forEach(function (t) {
+      if (t.projected) return;
+      var list = eventsInTurning(t).sort(function (a, b) { return (b.weight||0)-(a.weight||0); });
+      if (!list.length) return;
+      // pick best that fits; prefer unused kind in nearby window
+      var pick = null;
+      for (var i = 0; i < list.length; i++) {
+        var ev = list[i];
+        if (!fits(ev)) continue;
+        pick = ev; break;
+      }
+      if (pick) {
+        pick._role = "primary";
+        chosen.push(pick);
+        turningHas[t.start] = true;
+        usedKinds[pick.kind || "event"] = true;
+      }
+    });
+
+    // Pass 2: fill with high-weight remaining for variety
+    candidates.forEach(function (ev) {
+      if (chosen.indexOf(ev) >= 0) return;
+      if (chosen.length >= maxLabels) return;
+      if (!fits(ev)) {
+        ev._role = "dot";
+        return;
+      }
+      // prefer new kinds
+      var kind = ev.kind || "event";
+      ev._role = usedKinds[kind] ? "secondary" : "primary";
+      usedKinds[kind] = true;
+      chosen.push(ev);
+    });
+
+    // Mark non-chosen as dots (still rendered when in view if close enough)
+    var chosenSet = {};
+    chosen.forEach(function (ev) { chosenSet[ev.label + "|" + ev.year] = true; });
+    events.forEach(function (ev) {
+      var k = ev.label + "|" + ev.year;
+      if (!chosenSet[k]) ev._role = "dot";
+    });
+
+    return chosen;
+  }
+
+  function assignLanesSpaced(list, span, viewportPx) {
+    var last = [-1e9, -1e9, -1e9];
+    var minGapPx = 56;
+    list.forEach(function (ev, idx) {
+      var best = idx % 3, bestScore = 1e9;
       for (var L = 0; L < 3; L++) {
-        var gap = ev.year - last[L];
-        var score = gap < minGap ? (minGap - gap) * 10 + L : L;
+        var gapPx = ((ev.year - last[L]) * MS_YEAR / span) * viewportPx;
+        var score = (gapPx < minGapPx ? (minGapPx - gapPx) * 20 : 0) + L * 0.1;
         if (score < bestScore) { bestScore = score; best = L; }
       }
       ev.lane = best;
       last[best] = ev.year;
     });
   }
+
+  // --- Desktop DOM refs ---
+  var viewport = document.getElementById("timeViewport");
+  var canvas = document.getElementById("timeCanvas");
+  var saecRow = document.getElementById("saecRow");
+  var tBands = document.getElementById("tBands");
+  var evLayer = document.getElementById("evLayer");
+  var tickLayer = document.getElementById("tickLayer");
+  var stagesEl = document.getElementById("stages");
+  var nowMarker = document.getElementById("nowMarker");
+  var nowClock = document.getElementById("nowClock");
+  var zoomHud = document.getElementById("zoomHud");
   var tooltip = document.getElementById("tooltip");
-  var scroller = document.getElementById("scroller");
-  var scrollHint = document.getElementById("scrollHint");
-  var timelineEl = document.getElementById("timeline");
 
-  // Saecula
-  var saecEl = document.getElementById("saecula");
-  saecula.forEach(function (s, i) {
-    var el = document.createElement("div");
-    el.className = "saeculum" + (s.projected ? " projected" : "");
-    el.style.left = pct(s.start) + "%";
-    el.style.width = widthPct(s.start, s.end) + "%";
-    el.style.animationDelay = (0.4 + i * 0.05) + "s";
-    el.innerHTML = '<div class="sname">' + esc(s.name) + '</div><div class="syears">' +
-      s.start + "–" + s.end + (s.projected ? " · proj." : "") + "</div>";
-    el.dataset.tipTitle = s.name + " saeculum";
-    el.dataset.tipBody = (s.projected ? "Projected next saeculum. " : "") +
-      "Roughly " + (s.end - s.start) + " years · " + s.start + "–" + s.end + ".";
-    saecEl.appendChild(el);
-  });
+  function xForMs(ms, focusMs, span, width) {
+    return ((ms - focusMs) / span + 0.5) * width;
+  }
 
-  // Turnings
-  var turningsEl = document.getElementById("turnings");
-  turnings.forEach(function (t, i) {
-    var el = document.createElement("div");
-    el.className = "turning " + t.type + (t.projected ? " projected" : "");
-    el.style.left = pct(t.start) + "%";
-    el.style.width = widthPct(t.start, t.end) + "%";
-    el.style.animationDelay = (0.55 + i * 0.03) + "s";
-    el.innerHTML = '<div class="band"></div><div class="label"><div class="name">' +
-      esc(t.name) + '</div><div class="dates">' + t.start + "–" + t.end + "</div></div>";
-    el.dataset.tipTitle = t.name + " · " + archTitle(t.type);
-    el.dataset.tipBody = t.saec + " saeculum. " + TURNING_COPY[t.type];
-    turningsEl.appendChild(el);
-    setTimeout(function () { el.classList.add("enter"); }, 550 + i * 30);
-  });
+  function renderDesktop(nowMs, span) {
+    if (!viewport || isMobileTape()) return;
+    var width = viewport.clientWidth || 1;
+    var focusMs = nowMs;
 
-  // Events
-  var eventsEl = document.getElementById("events");
-  function renderEvents(list, animate) {
-    assignLanes(list);
-    eventsEl.innerHTML = "";
-    list.forEach(function (ev, i) {
+    // Saecula
+    saecRow.innerHTML = "";
+    saecula.forEach(function (s) {
+      var x0 = xForMs(yearToMs(s.start), focusMs, span, width);
+      var x1 = xForMs(yearToMs(s.end), focusMs, span, width);
+      if (x1 < -40 || x0 > width + 40) return;
       var el = document.createElement("div");
-      el.className = "event lane-" + ev.lane;
-      el.style.left = pct(ev.year) + "%";
-      if (animate !== false && !reducedMotion) el.style.animationDelay = (0.9 + i * 0.03) + "s";
-      var yr = ev.end ? (ev.year + "–" + String(ev.end).slice(-2)) : String(ev.year);
-      if (ev.end && ev.end - ev.year > 10) yr = ev.year + "–" + ev.end;
+      el.className = "saec-chip";
+      el.style.left = Math.max(0, x0) + "px";
+      el.style.width = Math.max(8, Math.min(width, x1) - Math.max(0, x0)) + "px";
+      el.textContent = s.name + " · " + s.start + "–" + s.end;
+      saecRow.appendChild(el);
+    });
+
+    // Turning bands
+    tBands.innerHTML = "";
+    turnings.forEach(function (t) {
+      var x0 = xForMs(yearToMs(t.start), focusMs, span, width);
+      var x1 = xForMs(yearToMs(t.end), focusMs, span, width);
+      if (x1 < -20 || x0 > width + 20) return;
+      var w = x1 - x0;
+      if (w < 2) return;
+      var el = document.createElement("div");
+      el.className = "tband " + t.type + (t.projected ? " projected" : "");
+      el.style.left = x0 + "px";
+      el.style.width = w + "px";
+      if (w > 48) {
+        el.innerHTML = '<div class="blabel">' + esc(t.name) +
+          '<div class="bdates">' + t.start + "–" + t.end + "</div></div>";
+      }
+      tBands.appendChild(el);
+    });
+
+    // Events — thin + stagger
+    var labeled = selectVisibleEvents(span, width);
+    assignLanesSpaced(labeled.filter(function (e) { return e._role !== "dot"; }), span, width);
+    evLayer.innerHTML = "";
+    var showDots = span / MS_YEAR < 80;
+    events.forEach(function (ev) {
+      var x = xForMs(yearToMs(ev.year), focusMs, span, width);
+      if (x < -30 || x > width + 30) return;
+      var role = ev._role || "dot";
+      if (role === "dot" && !showDots && span / MS_YEAR > 120) return;
+      var el = document.createElement("div");
+      var lane = (ev.lane != null) ? ev.lane : (ev.year % 3);
+      el.className = "ev lane-" + lane + (role === "dot" ? " dot-only" : "") + (role === "primary" ? " primary" : "");
+      el.style.left = x + "px";
+      var yr = ev.end ? (ev.year + "–" + ev.end) : String(ev.year);
       el.innerHTML = '<div class="etick"></div><div class="elabel">' + esc(ev.label) +
         '</div><div class="eyear">' + esc(yr) + "</div>";
       el.dataset.tipTitle = ev.label;
-      el.dataset.tipBody = ev.detail + (ev.source ? " · " + ev.source : "");
-      eventsEl.appendChild(el);
-      if (animate !== false && !reducedMotion) {
-        setTimeout(function () { el.classList.add("enter"); }, 900 + i * 30);
-      } else {
-        el.style.opacity = "1";
-        el.classList.add("enter");
-      }
+      el.dataset.tipBody = (ev.detail || "") + (ev.source ? " · " + ev.source : "");
+      evLayer.appendChild(el);
     });
-  }
-  renderEvents(events, true);
 
-  // Now marker on desktop timeline
-  var nowMarker = document.createElement("div");
-  nowMarker.className = "now-marker";
-  nowMarker.id = "nowMarker";
-  nowMarker.setAttribute("aria-hidden", "true");
-  nowMarker.innerHTML = '<div class="now-label">Now</div><div class="now-glow"></div>';
-  nowMarker.style.left = pct(nowYear) + "%";
-  timelineEl.appendChild(nowMarker);
+    // Adaptive ticks
+    tickLayer.innerHTML = "";
+    var step = pickTickStep(span);
+    var startMs = focusMs - span / 2;
+    var endMs = focusMs + span / 2;
+    var t0 = Math.floor(startMs / step.ms) * step.ms;
+    var idx = 0;
+    for (var t = t0; t <= endMs + step.ms; t += step.ms) {
+      var x = xForMs(t, focusMs, span, width);
+      if (x < -20 || x > width + 20) { idx++; continue; }
+      var major = (idx % step.majorEvery) === 0;
+      var el = document.createElement("div");
+      el.className = "ttick" + (major ? " major" : "");
+      el.style.left = x + "px";
+      el.innerHTML = '<div class="stem"></div>' + (major || step.ms >= MS_YEAR ? '<div class="lab">' + esc(formatTick(t, step.unit, major)) + "</div>" : "");
+      tickLayer.appendChild(el);
+      idx++;
+    }
 
-  function updateNowMarker() {
-    var d = new Date();
-    nowYear = d.getFullYear() + ((d.getMonth() * 30.437 + d.getDate()) / 365.25);
-    if (nowYear < YEAR_START) nowYear = YEAR_START;
-    if (nowYear > YEAR_END) nowYear = YEAR_END;
-    nowMarker.style.left = pct(nowYear) + "%";
-  }
+    // Generation chips in childhood when year-scale
+    stagesEl.querySelectorAll(".gen-chip").forEach(function (n) { n.remove(); });
+    if (span / MS_YEAR > 8) {
+      var childRow = stagesEl.querySelector('[data-stage="child"]');
+      generations.forEach(function (g) {
+        var mid = (g.start + g.end) / 2;
+        var x = xForMs(yearToMs(mid), focusMs, span, width);
+        if (x < -40 || x > width + 40) return;
+        var chip = document.createElement("div");
+        chip.className = "gen-chip " + g.arch + (g.projected ? " projected" : "");
+        chip.style.left = x + "px";
+        chip.innerHTML = "<span>" + esc(g.short) + '</span><span class="garch">' + esc(archTitle(g.arch)) + "</span>";
+        chip.dataset.tipTitle = g.name + " · " + archTitle(g.arch);
+        chip.dataset.tipBody = "Born " + g.start + "–" + g.end + ". " + ARCH_COPY[g.arch];
+        childRow.appendChild(chip);
+      });
+    }
 
-  // Year ticks
-  var ticksEl = document.getElementById("ticks");
-  yearTicks.sort(function (a, b) { return a - b; }).forEach(function (y, i) {
-    var el = document.createElement("div");
-    el.className = "tick";
-    el.style.left = pct(y) + "%";
-    el.innerHTML = '<div class="stem"></div><div class="yr">' + y + "</div>";
-    ticksEl.appendChild(el);
-    setTimeout(function () { el.classList.add("visible"); }, 1200 + i * 20);
-  });
-
-  // Diagonal life-stage chips: place each generation in childhood at birth mid,
-  // then show the same generation progressing — for clarity show birth-row chips
-  // at childhood during birth turning midpoint, and also label in the stage
-  // matching archetype role at a reference turning midpoint.
-  // Simpler clear model: one chip per generation in Childhood lane at birth mid-year,
-  // plus birth-span strip below.
-  var stagesEl = document.getElementById("stages");
-  var stageMap = { child: "child", young: "young", midlife: "midlife", elder: "elder" };
-
-  // For each turning midpoint, which generation is in which life stage (approx 22y bands)
-  function stageForAge(age) {
-    if (age < 22) return "child";
-    if (age < 44) return "young";
-    if (age < 66) return "midlife";
-    return "elder";
+    nowClock.textContent = formatClock(nowMs);
+    zoomHud.textContent = "Zoom · " + zoomLabel(span);
+    if (!reducedMotion && introDone && scrollEnergy < 0.05) nowMarker.classList.add("pulse");
+    else if (reducedMotion) nowMarker.classList.remove("pulse");
   }
 
-  // Place generation chips at birth midpoint in Childhood — primary clear label
-  // AND at ~age 33 in young adult for diagonal feel (only if not overlapping birth label too much)
-  generations.forEach(function (g, i) {
-    var mid = (g.start + g.end) / 2;
-    var row = stagesEl.querySelector('[data-stage="child"]');
-    var chip = document.createElement("div");
-    chip.className = "gen-chip " + g.arch + (g.projected ? " projected" : "");
-    chip.style.left = pct(mid) + "%";
-    chip.style.animationDelay = (1.1 + i * 0.025) + "s";
-    chip.innerHTML = "<span>" + esc(g.short) + '</span><span class="garch">' + esc(archTitle(g.arch)) + "</span>";
-    chip.dataset.tipTitle = g.name + " · " + archTitle(g.arch);
-    chip.dataset.tipBody = "Born " + g.start + "–" + g.end + ". " + ARCH_COPY[g.arch] +
-      (g.name === "Progressive" ? " Civil War saeculum has no separate Hero cohort (S&H)." : "");
-    row.appendChild(chip);
-    setTimeout(function () { chip.classList.add("enter"); }, 1100 + i * 25);
-
-    // Life-stage row labels evoke the diagonal; chips stay in Childhood for clarity.
-  });
-
-  // Birth-span strip
-  var birthEl = document.getElementById("gensBirth");
-  generations.forEach(function (g, i) {
-    var el = document.createElement("div");
-    el.className = "gbirth " + g.arch + (g.projected ? " projected" : "");
-    el.style.left = pct(g.start) + "%";
-    el.style.width = Math.max(widthPct(g.start, g.end), 0.4) + "%";
-    el.style.animationDelay = (1.5 + i * 0.02) + "s";
-    // vertical stagger slight for dense early gens
-    if (i % 2 === 1) el.style.top = "1.1rem";
-    el.innerHTML = '<div class="gn">' + esc(g.short) + " · " + esc(archTitle(g.arch)) +
-      '</div><div class="gy">' + g.start + "–" + g.end + "</div>";
-    el.dataset.tipTitle = g.name;
-    el.dataset.tipBody = "Birth years " + g.start + "–" + g.end + " · " + archTitle(g.arch) + " archetype. " + ARCH_COPY[g.arch];
-    birthEl.appendChild(el);
-    setTimeout(function () { el.classList.add("enter"); }, 1500 + i * 20);
-  });
-
-  // Tooltips desktop
+  // Tooltips
   function showTip(e, title, body) {
     tooltip.innerHTML = '<div class="tt-title">' + esc(title) + '</div><div class="tt-body">' + esc(body) + "</div>";
     tooltip.classList.add("show");
@@ -990,102 +976,36 @@
   }
   function hideTip() { tooltip.classList.remove("show"); }
 
-  document.getElementById("timeline").addEventListener("pointerover", function (e) {
-    if (window.matchMedia("(max-width: 700px)").matches) return;
-    var t = e.target.closest("[data-tip-title]");
-    if (!t) return;
-    showTip(e, t.dataset.tipTitle, t.dataset.tipBody);
-  });
-  document.getElementById("timeline").addEventListener("pointermove", function (e) {
-    if (tooltip.classList.contains("show")) moveTip(e);
-  });
-  document.getElementById("timeline").addEventListener("pointerout", function (e) {
-    var t = e.target.closest("[data-tip-title]");
-    if (!t) return;
-    if (!e.relatedTarget || !t.contains(e.relatedTarget)) hideTip();
-  });
-
-  scroller.addEventListener("wheel", function (e) {
-    var dx = e.deltaX, dy = e.deltaY;
-    if (e.shiftKey && Math.abs(dy) > Math.abs(dx)) { dx = dy; dy = 0; }
-    if (Math.abs(dy) > Math.abs(dx) && !e.shiftKey) {
-      scroller.scrollLeft += dy; e.preventDefault();
-    }
-    if (scroller.scrollLeft > 40) scrollHint.classList.add("hidden");
-  }, { passive: false });
-  scroller.addEventListener("scroll", function () {
-    if (scroller.scrollLeft > 40) scrollHint.classList.add("hidden");
-  }, { passive: true });
-  scroller.addEventListener("keydown", function (e) {
-    if (e.key === "ArrowRight") { scroller.scrollLeft += 140; e.preventDefault(); }
-    if (e.key === "ArrowLeft") { scroller.scrollLeft -= 140; e.preventDefault(); }
-  });
-  function desktopScrollTarget() {
-    var tw = timelineEl.offsetWidth || 6200;
-    var target = (pct(nowYear) / 100) * tw - scroller.clientWidth * 0.55;
-    var max = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
-    if (target < 0) target = 0;
-    if (target > max) target = max;
-    return target;
+  if (viewport) {
+    viewport.addEventListener("pointerover", function (e) {
+      if (isMobileTape()) return;
+      var t = e.target.closest("[data-tip-title]");
+      if (!t) return;
+      t.classList.add("show-label");
+      showTip(e, t.dataset.tipTitle, t.dataset.tipBody);
+    });
+    viewport.addEventListener("pointermove", function (e) {
+      if (tooltip.classList.contains("show")) moveTip(e);
+    });
+    viewport.addEventListener("pointerout", function (e) {
+      var t = e.target.closest("[data-tip-title]");
+      if (t) t.classList.remove("show-label");
+      if (!t) return;
+      if (!e.relatedTarget || !t.contains(e.relatedTarget)) hideTip();
+    });
   }
 
-  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
-
-  function startTickAlong() {
-    if (reducedMotion) return;
-    nowMarker.classList.add("pulse");
-    // micro tick: refresh fractional position periodically so the marker feels alive
-    setInterval(updateNowMarker, 60 * 1000);
+  // --- Mobile ---
+  function isMobileTape() {
+    return window.matchMedia("(max-width: 700px)").matches;
   }
-
-  function animateDesktopToNow() {
-    var target = desktopScrollTarget();
-    scroller.scrollLeft = 0;
-    if (reducedMotion) {
-      scroller.scrollLeft = target;
-      scrollHint.classList.add("hidden");
-      return;
-    }
-    timelineEl.classList.add("zooming");
-    var origin = pct(nowYear) + "% 42%";
-    timelineEl.style.transformOrigin = origin;
-    timelineEl.style.transform = "scale(0.92)";
-    var start = 0;
-    var t0 = performance.now();
-    var dur = 2200;
-    function frame(now) {
-      var p = Math.min(1, (now - t0) / dur);
-      var e = easeOutCubic(p);
-      scroller.scrollLeft = start + (target - start) * e;
-      var sc = 0.92 + 0.08 * e;
-      timelineEl.style.transform = "scale(" + sc + ")";
-      if (p < 1) {
-        requestAnimationFrame(frame);
-      } else {
-        timelineEl.style.transform = "";
-        timelineEl.classList.remove("zooming");
-        scrollHint.classList.add("hidden");
-        startTickAlong();
-      }
-    }
-    requestAnimationFrame(frame);
-  }
-
-  // Begin at left, then ease into today
-  scroller.scrollLeft = 0;
-  requestAnimationFrame(function () { requestAnimationFrame(animateDesktopToNow); });
-
-  // Mobile year-tape
-
-  var PX = 16; // px per year
-  var tapeScroll = document.getElementById("tapeScroll");
-  var tape = document.getElementById("tape");
-  var tapeTicks = document.getElementById("tapeTicks");
-  var tapeBands = document.getElementById("tapeBands");
-  var tapePadTop = document.getElementById("tapePadTop");
-  var tapePadBottom = document.getElementById("tapePadBottom");
   var tapeViewport = document.getElementById("tapeViewport");
+  var mBands = document.getElementById("mBands");
+  var mTicks = document.getElementById("mTicks");
+  var mEvs = document.getElementById("mEvs");
   var roYear = document.getElementById("roYear");
+  var roClock = document.getElementById("roClock");
+  var roZoom = document.getElementById("roZoom");
   var roSaec = document.getElementById("roSaec");
   var roTurningWrap = document.getElementById("roTurningWrap");
   var roTurning = document.getElementById("roTurning");
@@ -1095,10 +1015,6 @@
   var roEvents = document.getElementById("roEvents");
   var cursorYear = document.getElementById("cursorYear");
 
-  function isMobileTape() {
-    return window.matchMedia("(max-width: 700px)").matches;
-  }
-
   function lifeStage(age) {
     if (age < 0) return null;
     if (age <= 20) return "Childhood";
@@ -1107,22 +1023,18 @@
     if (age <= 83) return "Elder";
     return null;
   }
-
   function turningAt(year) {
     for (var i = 0; i < turnings.length; i++) {
       var t = turnings[i];
       if (year >= t.start && year < t.end) return t;
-      // inclusive end for last year of turning if next doesn't claim it
       if (year === t.end) {
         var next = turnings[i + 1];
         if (!next || next.start > year) return t;
       }
     }
-    // clamp to nearest
     if (year < turnings[0].start) return turnings[0];
     return turnings[turnings.length - 1];
   }
-
   function saeculumAt(year) {
     for (var i = 0; i < saecula.length; i++) {
       var s = saecula[i];
@@ -1136,96 +1048,25 @@
     return saecula[saecula.length - 1];
   }
 
-  function buildTape() {
-    if (!tapeScroll) return;
-    var vh = tapeViewport.clientHeight || Math.floor(window.innerHeight * 0.45);
-    var pad = Math.max(Math.floor(vh / 2), 120);
-    tapePadTop.style.height = pad + "px";
-    tapePadBottom.style.height = pad + "px";
-
-    var years = YEAR_END - YEAR_START + 1;
-    tapeTicks.style.height = (years * PX) + "px";
-    tapeBands.style.top = pad + "px";
-    tapeBands.style.height = (years * PX) + "px";
-    document.querySelector(".tape-rail").style.top = pad + "px";
-    document.querySelector(".tape-rail").style.height = (years * PX) + "px";
-
-    // bands
-    tapeBands.innerHTML = "";
-    turnings.forEach(function (tn) {
-      var b = document.createElement("div");
-      b.className = "tape-band " + tn.type + (tn.projected ? " projected" : "");
-      b.style.top = ((tn.start - YEAR_START) * PX) + "px";
-      b.style.height = Math.max((tn.end - tn.start) * PX, 1) + "px";
-      tapeBands.appendChild(b);
-    });
-
-    // ticks — build in chunks via DocumentFragment
-    tapeTicks.innerHTML = "";
-    var eventYears = {};
-    events.forEach(function (ev) {
-      eventYears[ev.year] = true;
-      if (ev.end) {
-        for (var y = ev.year; y <= Math.min(ev.end, ev.year + 2); y++) eventYears[y] = true;
-      }
-    });
-
-    var frag = document.createDocumentFragment();
-    for (var y = YEAR_START; y <= YEAR_END; y++) {
-      var tick = document.createElement("div");
-      var cls = "tape-tick";
-      if (y % 10 === 0) cls += " y10";
-      else if (y % 5 === 0) cls += " y5";
-      if (eventYears[y]) cls += " has-event";
-      tick.className = cls;
-      tick.dataset.year = String(y);
-      tick.style.top = ((y - YEAR_START) * PX) + "px";
-      var html = '<div class="mark"></div>';
-      if (y % 10 === 0) html += '<div class="ylab">' + y + "</div>";
-      if (eventYears[y] && y % 5 !== 0) html += '<div class="evdot"></div>';
-      tick.innerHTML = html;
-      frag.appendChild(tick);
-    }
-    tapeTicks.appendChild(frag);
+  function yForMs(ms, focusMs, span, height) {
+    return ((ms - focusMs) / span + 0.5) * height;
   }
 
-  var lastYear = null;
-  var lastDecade = null;
-  var rafPending = false;
-  var snapTimer = null;
-
-  function yearFromScroll() {
-    var pad = tapePadTop.offsetHeight || 0;
-    var center = tapeScroll.scrollTop + tapeScroll.clientHeight / 2;
-    var y = Math.round((center - pad) / PX) + YEAR_START;
-    if (y < YEAR_START) y = YEAR_START;
-    if (y > YEAR_END) y = YEAR_END;
-    return y;
-  }
-
-  function scrollToYear(year, smooth) {
-    var pad = tapePadTop.offsetHeight || 0;
-    var top = pad + (year - YEAR_START) * PX - tapeScroll.clientHeight / 2;
-    if (smooth && !reducedMotion && "scrollTo" in tapeScroll) {
-      tapeScroll.scrollTo({ top: top, behavior: "smooth" });
-    } else {
-      tapeScroll.scrollTop = top;
-    }
-  }
-
-  function updateReadout(year) {
-    roYear.textContent = String(year);
-    cursorYear.textContent = String(year);
+  function updateReadout(nowMs, span) {
+    var year = msToYear(nowMs);
+    var yInt = Math.floor(year);
+    roYear.textContent = String(yInt);
+    cursorYear.textContent = span < 2 * MS_DAY ? formatTick(nowMs, span < 2 * MS_HOUR ? "minute" : "hour", true) : String(yInt);
+    roClock.textContent = formatClock(nowMs);
+    roZoom.textContent = "Zoom · " + zoomLabel(span);
 
     var s = saeculumAt(year);
     roSaec.textContent = s.name + (s.projected ? " (projected)" : "") + " · " + s.start + "–" + s.end;
-
     var tn = turningAt(year);
     roTurningWrap.className = "ro-row ro-turning " + tn.type;
     roTurning.textContent = tn.name + " · " + archTitle(tn.type);
     roTurningYears.textContent = tn.start + "–" + tn.end + (tn.projected ? " · projected" : "");
 
-    // being born
     var born = [];
     generations.forEach(function (g) {
       if (year >= g.start && year <= g.end) born.push(g);
@@ -1240,7 +1081,6 @@
       roBorn.textContent = "—";
     }
 
-    // living gens
     roLiving.innerHTML = "";
     var living = [];
     generations.forEach(function (g) {
@@ -1263,103 +1103,139 @@
       });
     }
 
-    // nearby events ±2 years
+    var nearYears = Math.max(2, (span / MS_YEAR) * 0.08);
     var near = events.filter(function (ev) {
       var end = ev.end || ev.year;
-      return (ev.year <= year + 2 && end >= year - 2);
-    });
+      return (ev.year <= year + nearYears && end >= year - nearYears);
+    }).sort(function (a, b) { return (b.weight||0)-(a.weight||0); }).slice(0, 4);
     if (near.length) {
       roEvents.textContent = near.map(function (ev) {
-        var span = ev.end ? (ev.year + "–" + ev.end) : String(ev.year);
-        return ev.label + " (" + span + ")";
+        var spanY = ev.end ? (ev.year + "–" + ev.end) : String(ev.year);
+        return ev.label + " (" + spanY + ")";
       }).join(" · ");
     } else {
       roEvents.textContent = "—";
     }
   }
 
-  function onTapeScroll() {
-    if (rafPending) return;
-    rafPending = true;
-    requestAnimationFrame(function () {
-      rafPending = false;
-      if (!isMobileTape()) return;
-      var year = yearFromScroll();
-      if (year !== lastYear) {
-        var decade = Math.floor(year / 10);
-        if (lastYear !== null && decade !== lastDecade && year % 10 === 0) {
-          if (!reducedMotion && typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
-            try { navigator.vibrate(5); } catch (e) {}
-          }
-        }
-        if (year % 10 === 0) lastDecade = decade;
-        lastYear = year;
-        updateReadout(year);
-      }
-      if (!reducedMotion) {
-        clearTimeout(snapTimer);
-        snapTimer = setTimeout(function () {
-          var y = yearFromScroll();
-          var pad = tapePadTop.offsetHeight || 0;
-          var target = pad + (y - YEAR_START) * PX - tapeScroll.clientHeight / 2;
-          if (Math.abs(tapeScroll.scrollTop - target) > 1) {
-            tapeScroll.scrollTo({ top: target, behavior: "smooth" });
-          }
-        }, 80);
-      }
-    });
-  }
+  function renderMobile(nowMs, span) {
+    if (!tapeViewport || !isMobileTape()) return;
+    var height = tapeViewport.clientHeight || 1;
+    var focusMs = nowMs;
+    var width = tapeViewport.clientWidth || 1;
 
-  function initTape() {
-    if (!isMobileTape()) return;
-    buildTape();
-    var yTarget = _nowDate.getFullYear();
-    if (yTarget < YEAR_START) yTarget = YEAR_START;
-    if (yTarget > YEAR_END) yTarget = YEAR_END;
-    updateReadout(yTarget);
-    var cursor = document.querySelector(".tape-cursor");
-    requestAnimationFrame(function () {
-      if (reducedMotion) {
-        scrollToYear(yTarget, false);
-        lastYear = yTarget;
-        updateReadout(yTarget);
-        return;
-      }
-      // start earlier in the tape, then ease to today
-      scrollToYear(Math.max(YEAR_START, yTarget - 80), false);
-      requestAnimationFrame(function () {
-        scrollToYear(yTarget, true);
-        lastYear = yTarget;
-        updateReadout(yTarget);
-        setTimeout(function () {
-          if (cursor) cursor.classList.add("pulse");
-        }, 900);
-      });
+    mBands.innerHTML = "";
+    turnings.forEach(function (tn) {
+      var y0 = yForMs(yearToMs(tn.start), focusMs, span, height);
+      var y1 = yForMs(yearToMs(tn.end), focusMs, span, height);
+      if (y1 < -10 || y0 > height + 10) return;
+      var el = document.createElement("div");
+      el.className = "m-band " + tn.type + (tn.projected ? " projected" : "");
+      el.style.top = Math.min(y0, y1) + "px";
+      el.style.height = Math.max(2, Math.abs(y1 - y0)) + "px";
+      mBands.appendChild(el);
     });
-  }
 
-  if (tapeScroll) {
-    tapeScroll.addEventListener("scroll", onTapeScroll, { passive: true });
-    window.addEventListener("resize", function () {
-      if (!isMobileTape()) return;
-      var y = lastYear || Math.round(nowYear);
-      buildTape();
-      scrollToYear(y, false);
-      updateReadout(y);
-    });
-    // Only build when mobile (or always build — cheap enough; hide via CSS)
-    if (isMobileTape()) initTape();
-    else {
-      // Prebuild lightly when switching later
-      window.addEventListener("orientationchange", function () { setTimeout(initTape, 200); });
+    mTicks.innerHTML = "";
+    var step = pickTickStep(span);
+    var startMs = focusMs - span / 2;
+    var endMs = focusMs + span / 2;
+    var t0 = Math.floor(startMs / step.ms) * step.ms;
+    var idx = 0;
+    for (var t = t0; t <= endMs + step.ms; t += step.ms) {
+      var y = yForMs(t, focusMs, span, height);
+      if (y < -20 || y > height + 20) { idx++; continue; }
+      var major = (idx % step.majorEvery) === 0;
+      var el = document.createElement("div");
+      el.className = "m-tick" + (major ? " major" : "");
+      el.style.top = y + "px";
+      el.innerHTML = '<div class="mark"></div>' + (major ? '<div class="ylab">' + esc(formatTick(t, step.unit, true)) + "</div>" : "");
+      mTicks.appendChild(el);
+      idx++;
     }
+
+    mEvs.innerHTML = "";
+    var labeled = selectVisibleEvents(span, height);
+    var labelSet = {};
+    labeled.forEach(function (ev) {
+      if (ev._role !== "dot") labelSet[ev.label + "|" + ev.year] = true;
+    });
+    var lastY = -1e9;
+    var minGap = 28;
+    events.forEach(function (ev) {
+      var y = yForMs(yearToMs(ev.year), focusMs, span, height);
+      if (y < -20 || y > height + 20) return;
+      var key = ev.label + "|" + ev.year;
+      var showLabel = !!labelSet[key] && Math.abs(y - lastY) >= minGap;
+      var el = document.createElement("div");
+      if (showLabel) {
+        el.className = "m-ev";
+        el.style.top = y + "px";
+        el.textContent = ev.label + " · " + ev.year;
+        lastY = y;
+      } else {
+        el.className = "m-ev dot-only";
+        el.style.top = y + "px";
+      }
+      mEvs.appendChild(el);
+    });
+
+    updateReadout(nowMs, span);
   }
 
+  // --- Input: scroll velocity → zoom energy ---
+  function bumpEnergy(amount) {
+    scrollEnergy = clamp(scrollEnergy + amount, 0, 1);
+  }
 
+  function onWheel(e) {
+    e.preventDefault();
+    var speed = Math.min(1, Math.hypot(e.deltaX, e.deltaY) / 180);
+    bumpEnergy(0.12 + speed * 0.75);
+  }
+
+  var touchState = null;
+  function onTouchStart(e) {
+    if (!e.touches || !e.touches.length) return;
+    touchState = { y: e.touches[0].clientY, x: e.touches[0].clientX, t: performance.now(), vy: 0 };
+  }
+  function onTouchMove(e) {
+    if (!touchState || !e.touches || !e.touches.length) return;
+    e.preventDefault();
+    var y = e.touches[0].clientY;
+    var x = e.touches[0].clientX;
+    var t = performance.now();
+    var dt = Math.max(1, t - touchState.t);
+    var dy = y - touchState.y;
+    var dx = x - touchState.x;
+    var v = Math.hypot(dx, dy) / dt; // px/ms
+    touchState = { y: y, x: x, t: t, vy: v };
+    bumpEnergy(clamp(v * 18, 0.04, 0.85));
+  }
+  function onTouchEnd() {
+    if (!touchState) return;
+    // fling
+    bumpEnergy(clamp(touchState.vy * 40, 0, 1));
+    touchState = null;
+  }
+
+  if (viewport) {
+    viewport.addEventListener("wheel", onWheel, { passive: false });
+    viewport.addEventListener("touchstart", onTouchStart, { passive: true });
+    viewport.addEventListener("touchmove", onTouchMove, { passive: false });
+    viewport.addEventListener("touchend", onTouchEnd, { passive: true });
+  }
+  if (tapeViewport) {
+    tapeViewport.addEventListener("wheel", onWheel, { passive: false });
+    tapeViewport.addEventListener("touchstart", onTouchStart, { passive: true });
+    tapeViewport.addEventListener("touchmove", onTouchMove, { passive: false });
+    tapeViewport.addEventListener("touchend", onTouchEnd, { passive: true });
+  }
+
+  // --- Live events merge (same as before) ---
   function eventKey(ev) {
     return String(ev.label || "").toLowerCase().replace(/\s+/g, " ").trim() + "|" + String(ev.year);
   }
-
   function mergeLiveEvents(extra) {
     if (!extra || !extra.length) return 0;
     var seen = {};
@@ -1367,43 +1243,30 @@
     var added = 0;
     extra.forEach(function (raw) {
       if (!raw || raw.year == null || !raw.label) return;
-      var year = Number(raw.year);
-      if (!isFinite(year)) return;
-      year = Math.round(year);
-      if (year < YEAR_START || year > Math.ceil(nowYear) + 1) return;
-      if (year > YEAR_END) return;
+      var year = Math.round(Number(raw.year));
+      if (!isFinite(year) || year < YEAR_START || year > YEAR_END) return;
       var ev = {
         label: String(raw.label).slice(0, 40),
         year: year,
         detail: String(raw.detail || (raw.label + " (" + year + ", Grokipedia live).")),
-        source: raw.source || ("https://grokipedia.com/page/" + encodeURIComponent(raw.slug || raw.label))
+        source: raw.source || ("https://grokipedia.com/page/" + encodeURIComponent(raw.slug || raw.label)),
+        kind: "live",
+        weight: 8
       };
-      if (raw.end != null && isFinite(Number(raw.end))) ev.end = Math.round(Number(raw.end));
-      var k = eventKey(ev);
-      if (seen[k]) return;
-      seen[k] = true;
+      if (seen[eventKey(ev)]) return;
+      seen[eventKey(ev)] = true;
       events.push(ev);
       added++;
     });
-    if (added) {
-      events.sort(function (a, b) { return a.year - b.year; });
-      renderEvents(events, false);
-      if (isMobileTape() && tapeScroll) {
-        var y = lastYear || Math.round(nowYear);
-        buildTape();
-        scrollToYear(y, false);
-        updateReadout(y);
-      }
-    }
+    if (added) events.sort(function (a, b) { return a.year - b.year; });
     return added;
   }
-
   function fetchLiveEvents() {
     var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
     var timer = setTimeout(function () { try { if (ctrl) ctrl.abort(); } catch (e) {} }, 3000);
     var opts = { headers: { "Accept": "application/json" } };
     if (ctrl) opts.signal = ctrl.signal;
-    return fetch("/.netlify/functions/events?since=" + encodeURIComponent(String(Math.floor(nowYear))), opts)
+    return fetch("/.netlify/functions/events?since=" + encodeURIComponent(String(new Date().getFullYear())), opts)
       .then(function (r) {
         if (!r.ok) throw new Error("live " + r.status);
         return r.json();
@@ -1415,21 +1278,75 @@
         mergeLiveEvents(list);
         return list;
       })
-      .catch(function () {
-        clearTimeout(timer);
-        // silent fallback to baked-in baseline
-        return null;
-      });
+      .catch(function () { clearTimeout(timer); return null; });
   }
-
   fetchLiveEvents();
 
-  // Expose for overlap test harness
+  // --- rAF loop ---
+  var stats = { labeled: 0, total: events.length, perTurning: {} };
+
+  function recomputeStats(span, viewportPx) {
+    var labeled = selectVisibleEvents(span, viewportPx || 900);
+    stats.labeled = labeled.filter(function (e) { return e._role !== "dot"; }).length;
+    stats.total = events.length;
+    stats.perTurning = {};
+    turnings.forEach(function (t) {
+      if (t.projected) {
+        stats.perTurning[t.name] = { shown: 0, total: 0, projected: true };
+        return;
+      }
+      var all = eventsInTurning(t);
+      var shown = all.filter(function (ev) { return ev._role && ev._role !== "dot"; }).length;
+      stats.perTurning[t.name] = { shown: shown, total: all.length, start: t.start, end: t.end };
+    });
+  }
+
+  function frame(now) {
+    var dt = Math.min(0.05, (now - lastFrame) / 1000);
+    lastFrame = now;
+    // decay scroll energy
+    scrollEnergy = Math.max(0, scrollEnergy - dt * 0.28);
+
+    var nowMs = Date.now();
+    var span = currentSpan();
+
+    if (isMobileTape()) renderMobile(nowMs, span);
+    else renderDesktop(nowMs, span);
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  // expose harness + stats snapshot helper
   window.__FT = {
-    YEAR_START: YEAR_START, YEAR_END: YEAR_END, events: events, generations: generations,
-    scrollToYear: scrollToYear, yearFromScroll: yearFromScroll, updateReadout: updateReadout,
-    nowYear: nowYear, mergeLiveEvents: mergeLiveEvents, fetchLiveEvents: fetchLiveEvents
+    events: events,
+    generations: generations,
+    turnings: turnings,
+    getSpan: currentSpan,
+    getZoomLabel: function () { return zoomLabel(currentSpan()); },
+    bumpEnergy: bumpEnergy,
+    setEnergy: function (e) { holdSpan = null; scrollEnergy = clamp(e, 0, 1); },
+    holdSpanMs: function (ms) { holdSpan = ms == null ? null : clamp(ms, SPAN_MIN, SPAN_MAX); },
+    holdZoom: function (level) {
+      // level: "close" | "mid" | "out"
+      holdSpan = null;
+      if (level === "close") holdSpan = SPAN_MIN;
+      else if (level === "mid") holdSpan = 3 * MS_YEAR;
+      else if (level === "out") holdSpan = SPAN_MAX;
+      else holdSpan = null;
+    },
+    stats: function () {
+      var span = currentSpan();
+      var px = (viewport && viewport.clientWidth) || (tapeViewport && tapeViewport.clientHeight) || 900;
+      recomputeStats(span, px);
+      return stats;
+    },
+    mergeLiveEvents: mergeLiveEvents,
+    fetchLiveEvents: fetchLiveEvents,
+    YEAR_START: YEAR_START,
+    YEAR_END: YEAR_END
   };
+
 })();
 </script>
 </body>
