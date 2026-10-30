@@ -64,8 +64,11 @@ function parseSearch(html) {
 }
 
 function yearFromText(text) {
-  var m = String(text).match(/\b(20(?:1[5-9]|2[0-6]))\b/);
-  return m ? Number(m[1]) : null;
+  var m = String(text).match(/\b((?:1[4-9]|20)\d{2})\b/);
+  if (!m) return null;
+  var y = Number(m[1]);
+  if (y < 1435 || y > 2115) return null;
+  return y;
 }
 
 function labelFromSlug(slug) {
@@ -150,18 +153,26 @@ exports.handler = async function (event) {
   }
   try {
     var nowY = new Date().getFullYear();
+    var qs = event.queryStringParameters || {};
+    var fromY = null;
+    var toY = null;
+    if (qs.from != null && isFinite(Number(qs.from))) fromY = Math.floor(Number(qs.from));
+    if (qs.to != null && isFinite(Number(qs.to))) toY = Math.floor(Number(qs.to));
     var since = Math.max(2015, nowY - 8);
     try {
-      var qSince = event.queryStringParameters && event.queryStringParameters.since;
+      var qSince = qs.since;
       if (qSince && isFinite(Number(qSince))) {
         since = Math.min(nowY, Math.max(2015, Math.floor(Number(qSince)) - 6));
       }
     } catch (e) {}
+    if (fromY != null) since = fromY;
+    var until = (toY != null) ? toY : (nowY + 1);
+    if (until < since) { var tmp = since; since = until; until = tmp; }
 
     var byTopic = {};
     function add(ev, force) {
       if (!ev || !ev.year || !ev.label) return;
-      if (ev.year < since || ev.year > nowY + 1) return;
+      if (ev.year < since || ev.year > until) return;
       if (!force && isNoise(ev.slug || "", ev.detail || "")) return;
       var topic = topicKey(ev.slug || "", ev.label);
       var row = {
@@ -181,8 +192,15 @@ exports.handler = async function (event) {
       if (nextLen && (!prevLen || nextLen < prevLen)) byTopic[topic] = row;
     }
 
+    var queries = SEARCH_QUERIES.slice();
+    // For a zoomed historical window, also probe the midpoint / endpoints
+    if (fromY != null && toY != null && (toY - fromY) <= 80) {
+      var mid = Math.round((fromY + toY) / 2);
+      queries = [String(fromY), String(mid), String(toY), fromY + " history", mid + " war"].concat(queries);
+    }
+
     await Promise.all(
-      SEARCH_QUERIES.map(function (q) {
+      queries.slice(0, 8).map(function (q) {
         var url = "https://grokipedia.com/search?q=" + encodeURIComponent(q);
         return get(url, 2200)
           .then(function (html) {
@@ -220,6 +238,8 @@ exports.handler = async function (event) {
       body: JSON.stringify({
         source: "grokipedia",
         generatedAt: new Date().toISOString(),
+        from: since,
+        to: until,
         events: events
       })
     };
