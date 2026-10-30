@@ -47,14 +47,6 @@
     letter-spacing: 0.18em;
     text-transform: uppercase;
   }
-  .brand p {
-    margin-top: 0.3rem;
-    font-size: 0.75rem;
-    color: var(--ink-muted);
-    letter-spacing: 0.03em;
-    max-width: 46rem;
-    line-height: 1.5;
-  }
   .chain {
     flex: 0 0 auto;
     padding: 0 2.5rem 0.4rem;
@@ -85,7 +77,7 @@
   .edge-fade.right { right: 0; background: linear-gradient(270deg, var(--bg), transparent); }
 
   .scroll-hint {
-    position: absolute; bottom: 5.2rem; right: 2rem;
+    position: absolute; bottom: 1.5rem; right: 2rem;
     font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase;
     color: var(--ink-faint); z-index: 12; opacity: 0;
     animation: fadeIn 0.7s var(--ease) 2.2s forwards;
@@ -290,35 +282,6 @@
   }
   .tooltip .tt-body { color: var(--ink-muted); }
 
-  footer {
-    flex: 0 0 auto;
-    padding: 0.65rem 2.5rem 1rem;
-    display: flex; flex-wrap: wrap; align-items: flex-start;
-    justify-content: space-between; gap: 0.85rem;
-    border-top: 1px solid var(--line);
-    opacity: 0; animation: fadeIn 0.7s var(--ease) 1.6s forwards;
-  }
-  .legend {
-    display: flex; flex-wrap: wrap; gap: 0.75rem 1.1rem;
-    font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--ink-muted);
-  }
-  .legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
-  .legend i { display: inline-block; width: 10px; height: 2px; }
-  .legend .l-high i { background: var(--high); }
-  .legend .l-awakening i { background: var(--awakening); }
-  .legend .l-unraveling i { background: var(--unraveling); }
-  .legend .l-crisis i { background: var(--crisis); }
-  .legend .l-arch i {
-    width: 6px; height: 6px; border-radius: 50%;
-    border: 1px solid var(--ink-muted); background: transparent;
-  }
-  .legend .l-evt i { width: 1px; height: 8px; background: var(--ink-faint); }
-  .legend .l-proj i { width: 12px; height: 0; border-top: 1px dashed var(--ink-faint); }
-  .note {
-    font-size: 0.55rem; color: var(--ink-faint); letter-spacing: 0.02em;
-    max-width: 34rem; line-height: 1.45; text-align: right;
-  }
 
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   @keyframes fadeUp {
@@ -334,6 +297,42 @@
     to { opacity: 1; transform: translateX(-50%) translateY(0); }
   }
 
+
+  .now-marker {
+    position: absolute; top: 1.85rem; bottom: 3.2rem;
+    width: 2px; transform: translateX(-50%);
+    background: rgba(255,255,255,0.75);
+    z-index: 9; pointer-events: none;
+  }
+  .now-marker .now-glow {
+    position: absolute; left: 50%; top: 0; transform: translateX(-50%);
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 0 0 rgba(255,255,255,0.45);
+  }
+  .now-marker .now-label {
+    position: absolute; left: 50%; top: -1.15rem; transform: translateX(-50%);
+    font-size: 0.48rem; letter-spacing: 0.14em; text-transform: uppercase;
+    color: rgba(255,255,255,0.85); white-space: nowrap;
+  }
+  .now-marker.pulse .now-glow {
+    animation: nowPulse 2.4s ease-in-out infinite;
+  }
+  @keyframes nowPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); opacity: 0.85; }
+    50% { box-shadow: 0 0 14px 4px rgba(255,255,255,0.35); opacity: 1; }
+  }
+  .timeline.zooming {
+    will-change: transform;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .now-marker.pulse .now-glow { animation: none; }
+    header, .chain, .scroll-hint, .saeculum, .turning, .event, .tick, .gen-chip, .gbirth, .axis {
+      animation: none !important; opacity: 1 !important; transform: none !important;
+    }
+    .turning, .event, .tick, .gen-chip, .gbirth { opacity: 1; }
+  }
+
   /* Mobile */
   @media (max-width: 700px) {
     html, body { height: 100%; overflow: hidden; }
@@ -346,7 +345,6 @@
       opacity: 1;
     }
     .brand h1 { font-size: 0.95rem; letter-spacing: 0.16em; }
-    .brand p { display: none; }
     .chain {
       display: none;
     }
@@ -450,6 +448,13 @@
       font-variant-numeric: tabular-nums;
       color: var(--ink);
       text-shadow: 0 0 18px rgba(0,0,0,0.9);
+    }
+
+    .tape-cursor.pulse .cursor-notch {
+      animation: nowPulse 2.4s ease-in-out infinite;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .tape-cursor.pulse .cursor-notch { animation: none; }
     }
     .tape-cursor .cursor-notch {
       position: absolute;
@@ -557,9 +562,6 @@
       border-radius: 50%;
     }
 
-    footer {
-      display: none;
-    }
     .tooltip { display: none !important; }
 
     @media (prefers-reduced-motion: reduce) {
@@ -572,7 +574,6 @@
 <header>
   <div class="brand">
     <h1>Four Turnings</h1>
-    <p>Strauss &amp; Howe’s Anglo-American saeculum from 1435 — High, Awakening, Unraveling, Crisis — with generations on the life-stage diagonal and key events.</p>
   </div>
 </header>
 <div class="chain">
@@ -643,24 +644,6 @@
   </div>
 </div>
 
-<footer>
-  <div class="legend">
-    <span class="l-high"><i></i>High</span>
-    <span class="l-awakening"><i></i>Awakening</span>
-    <span class="l-unraveling"><i></i>Unraveling</span>
-    <span class="l-crisis"><i></i>Crisis</span>
-    <span class="l-arch"><i></i>Generation</span>
-    <span class="l-evt"><i></i>Event</span>
-    <span class="l-proj"><i></i>Projected</span>
-  </div>
-  <p class="note">
-    Turning &amp; generation dates follow Strauss &amp; Howe (via saeculum.info atlas / Wikipedia timing table).
-    Event dates: Wikipedia.
-    Also: generationaldynamics.com (diagonal life-stages), timepage.org.
-    Where sources differ on era boundaries, S&amp;H published dates are used.
-    Civil War saeculum has no Hero cohort (S&amp;H anomaly). On phones, scroll the year tape.
-  </p>
-</footer>
 <div class="tooltip" id="tooltip" role="tooltip"></div>
 
 <script>
@@ -669,6 +652,14 @@
 
   var YEAR_START = 1435;
   var YEAR_END = 2115;
+
+  var reducedMotion = false;
+  try { reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (eRM) {}
+  var _nowDate = new Date();
+  var nowYear = _nowDate.getFullYear() + ((_nowDate.getMonth() * 30.437 + _nowDate.getDate()) / 365.25);
+  if (nowYear < YEAR_START) nowYear = YEAR_START;
+  if (nowYear > YEAR_END) nowYear = YEAR_END;
+
 
   var TURNING_COPY = {
     high: "Strong institutions, collective confidence, conformity.",
@@ -762,35 +753,48 @@
     { name: "Next Artists", short: "Next Artists", arch: "artist", start: 2095, end: 2115, projected: true }
   ];
 
-  // Events — dates checked against Wikipedia (see footer)
+  // Events — dates verified against Grokipedia pages (static baseline; live merge may add recent)
   var events = [
-    { label: "Wars of the Roses", year: 1455, end: 1487, detail: "Armed struggle for the English throne, 1455–1487 (Wikipedia)." },
-    { label: "Bosworth", year: 1485, detail: "Battle of Bosworth Field, 1485 — decisive Wars of the Roses battle (Wikipedia)." },
-    { label: "Reformation", year: 1517, detail: "Protestant Reformation begins in the 16th century; conventionally marked from 1517 (Wikipedia)." },
-    { label: "Dissolution", year: 1536, end: 1541, detail: "Dissolution of the monasteries under Henry VIII, 1536–1541 (Wikipedia)." },
-    { label: "Armada", year: 1588, detail: "Spanish Armada sails 1588 (Wikipedia)." },
-    { label: "Mayflower", year: 1620, detail: "Mayflower voyage; Pilgrims reach New England in 1620 (Wikipedia)." },
-    { label: "English Civil War", year: 1642, end: 1651, detail: "English Civil War, 1642–1651 (Wikipedia)." },
-    { label: "Glorious Revolution", year: 1688, detail: "Deposition of James II, November 1688 (Wikipedia)." },
-    { label: "French & Indian War", year: 1754, end: 1763, detail: "French and Indian War, 1754–1763 (Wikipedia)." },
-    { label: "Boston Tea Party", year: 1773, detail: "Boston Tea Party, 16 December 1773 (Wikipedia)." },
-    { label: "Declaration", year: 1776, detail: "U.S. Declaration of Independence, 1776 (Wikipedia)." },
-    { label: "Louisiana Purchase", year: 1803, detail: "Louisiana Purchase, 1803 (Wikipedia)." },
-    { label: "U.S. Civil War", year: 1861, end: 1865, detail: "American Civil War; Confederacy formed 1861 (Wikipedia)." },
-    { label: "WW1", year: 1914, end: 1918, detail: "World War I, 28 July 1914 – 11 November 1918 (Wikipedia)." },
-    { label: "1918 flu", year: 1918, end: 1920, detail: "1918–1920 influenza pandemic (Wikipedia)." },
-    { label: "1929 Crash", year: 1929, detail: "Wall Street crash of 1929, late October (Wikipedia)." },
-    { label: "WW2", year: 1939, end: 1945, detail: "World War II; Pearl Harbor 1941, Normandy 1944 (Wikipedia)." },
-    { label: "JFK", year: 1963, detail: "Assassination of John F. Kennedy, 22 November 1963 (Wikipedia)." },
-    { label: "Beatles", year: 1962, end: 1970, detail: "The Beatles formed 1960 in Liverpool; peak years often cited mid-1960s (Wikipedia)." },
-    { label: "Moon landing", year: 1969, detail: "Apollo 11, 16–24 July 1969 — first crewed Moon landing (Wikipedia)." },
-    { label: "Oil crisis", year: 1973, detail: "1973 oil crisis / OAPEC embargo, October 1973 (Wikipedia)." },
-    { label: "Berlin Wall", year: 1989, detail: "Fall of the Berlin Wall, 1989 (wall stood 1961–1989) (Wikipedia)." },
-    { label: "WWW", year: 1991, detail: "World Wide Web invented 1989; opened more widely in the early 1990s — 1991 often cited for public web (Wikipedia)." },
-    { label: "9/11", year: 2001, detail: "September 11 attacks, 2001 (Wikipedia)." },
-    { label: "2008 crash", year: 2008, detail: "2008 financial crisis (Wikipedia)." },
-    { label: "Covid", year: 2020, detail: "COVID-19 pandemic; outbreak late 2019, global 2020 (Wikipedia)." }
+    { label: "Castillon", year: 1453, detail: "Battle of Castillon, 17 July 1453 — effective end of the Hundred Years' War (Grokipedia).", source: "https://grokipedia.com/page/Battle_of_Castillon" },
+    { label: "Wars of the Roses", year: 1455, end: 1487, detail: "Dynastic civil wars in England, 1455–1487 (Grokipedia).", source: "https://grokipedia.com/page/Wars_of_the_Roses" },
+    { label: "Bosworth", year: 1485, detail: "Battle of Bosworth Field, 22 August 1485 — Richard III killed; Henry VII begins Tudor rule (Grokipedia).", source: "https://grokipedia.com/page/Wars_of_the_Roses" },
+    { label: "Cabot voyage", year: 1497, detail: "John Cabot reaches the North American mainland in 1497 for Henry VII (Grokipedia).", source: "https://grokipedia.com/page/John_Cabot" },
+    { label: "Reformation", year: 1517, detail: "Martin Luther's Ninety-five Theses, 31 October 1517 — spark of the Protestant Reformation (Grokipedia).", source: "https://grokipedia.com/page/Protestant_Reformation" },
+    { label: "Dissolution", year: 1536, end: 1541, detail: "Dissolution of the monasteries under Henry VIII, 1536–1541 (Grokipedia).", source: "https://grokipedia.com/page/Dissolution_of_the_monasteries" },
+    { label: "Elizabeth I", year: 1558, detail: "Elizabeth I becomes Queen of England and Ireland, 17 November 1558 (Grokipedia).", source: "https://grokipedia.com/page/Elizabeth_I" },
+    { label: "Armada", year: 1588, detail: "Spanish Armada campaign of 1588 against England (Grokipedia).", source: "https://grokipedia.com/page/Spanish_Armada" },
+    { label: "Mayflower", year: 1620, detail: "Mayflower voyage to North America, 1620 (Grokipedia).", source: "https://grokipedia.com/page/Mayflower" },
+    { label: "English Civil War", year: 1642, end: 1651, detail: "English Civil War, beginning 1642 (Grokipedia).", source: "https://grokipedia.com/page/English_Civil_War" },
+    { label: "Restoration", year: 1660, detail: "Stuart Restoration — Charles II restored, 1660 (Grokipedia).", source: "https://grokipedia.com/page/Stuart_Restoration" },
+    { label: "Great Fire", year: 1666, detail: "Great Fire of London, 2–6 September 1666 (Grokipedia).", source: "https://grokipedia.com/page/Great_Fire_of_London" },
+    { label: "Glorious Revolution", year: 1688, detail: "Glorious Revolution of 1688–1689 — James II overthrown (Grokipedia).", source: "https://grokipedia.com/page/Glorious_Revolution" },
+    { label: "Act of Union", year: 1707, detail: "Acts of Union create the Kingdom of Great Britain, 1707 (Grokipedia).", source: "https://grokipedia.com/page/Treaty_of_Union" },
+    { label: "South Sea Bubble", year: 1720, detail: "South Sea Bubble speculative crisis in Great Britain, 1720 (Grokipedia).", source: "https://grokipedia.com/page/the_south_sea_bubble" },
+    { label: "Great Awakening", year: 1734, end: 1745, detail: "First Great Awakening Protestant revivals in the British American colonies, 1730s–1740s (Grokipedia).", source: "https://grokipedia.com/page/First_Great_Awakening" },
+    { label: "French & Indian War", year: 1754, end: 1763, detail: "French and Indian War, 1754–1763 (Grokipedia).", source: "https://grokipedia.com/page/French_and_Indian_War" },
+    { label: "Boston Tea Party", year: 1773, detail: "Boston Tea Party, 16 December 1773 (Grokipedia).", source: "https://grokipedia.com/page/Boston_Tea_Party" },
+    { label: "Declaration", year: 1776, detail: "U.S. Declaration of Independence adopted 4 July 1776 (Grokipedia).", source: "https://grokipedia.com/page/United_States_Declaration_of_Independence" },
+    { label: "Louisiana Purchase", year: 1803, detail: "Louisiana Purchase agreement, 1803 (Grokipedia).", source: "https://grokipedia.com/page/Louisiana_Purchase" },
+    { label: "Nat Turner", year: 1831, detail: "Nat Turner's Rebellion, Southampton County, Virginia, 21–23 August 1831 (Grokipedia).", source: "https://grokipedia.com/page/Nat_Turner%27s_slave_rebellion" },
+    { label: "Mexican–American War", year: 1846, end: 1848, detail: "Mexican–American War, April 1846 – February 1848 (Grokipedia).", source: "https://grokipedia.com/page/Mexican%E2%80%93American_War" },
+    { label: "U.S. Civil War", year: 1861, end: 1865, detail: "American Civil War; Confederacy formed 1861 (Grokipedia).", source: "https://grokipedia.com/page/American_Civil_War" },
+    { label: "Transcontinental RR", year: 1869, detail: "First U.S. transcontinental railroad completed, 1869 (Grokipedia).", source: "https://grokipedia.com/page/Transcontinental_railroad" },
+    { label: "Spanish–American War", year: 1898, detail: "Spanish–American War, April–August 1898 (Grokipedia).", source: "https://grokipedia.com/page/Spanish%E2%80%93American_War" },
+    { label: "Wright Flyer", year: 1903, detail: "Wright brothers' first powered flight, 17 December 1903 near Kitty Hawk (Grokipedia).", source: "https://grokipedia.com/page/Wright_brothers" },
+    { label: "WW1", year: 1914, end: 1918, detail: "World War I, 1914–1918 (Grokipedia).", source: "https://grokipedia.com/page/World_War_I" },
+    { label: "Spanish flu", year: 1918, end: 1920, detail: "1918–1920 influenza pandemic (Spanish flu) (Grokipedia).", source: "https://grokipedia.com/page/Spanish_flu" },
+    { label: "1929 Crash", year: 1929, detail: "Wall Street Crash of 1929, late October 1929 (Grokipedia).", source: "https://grokipedia.com/page/Wall_Street_Crash_of_1929" },
+    { label: "WW2", year: 1939, end: 1945, detail: "World War II, 1 September 1939 – 2 September 1945 (Grokipedia).", source: "https://grokipedia.com/page/World_War_II" },
+    { label: "JFK", year: 1963, detail: "Assassination of John F. Kennedy, 22 November 1963 (Grokipedia).", source: "https://grokipedia.com/page/Assassination_of_John_F._Kennedy" },
+    { label: "Moon landing", year: 1969, detail: "Apollo 11 lunar landing, 20 July 1969 (Grokipedia).", source: "https://grokipedia.com/page/Apollo_11" },
+    { label: "Oil crisis", year: 1973, detail: "1973 oil crisis; prices roughly quadrupled into 1974 (Grokipedia).", source: "https://grokipedia.com/page/1973_oil_crisis" },
+    { label: "Berlin Wall", year: 1989, detail: "Fall of the Berlin Wall, 9 November 1989 (Grokipedia).", source: "https://grokipedia.com/page/Fall_of_the_Berlin_Wall" },
+    { label: "WWW", year: 1989, detail: "World Wide Web invented by Tim Berners-Lee, 1989 (Grokipedia).", source: "https://grokipedia.com/page/World_Wide_Web" },
+    { label: "9/11", year: 2001, detail: "September 11 attacks, 2001 (Grokipedia).", source: "https://grokipedia.com/page/September_11_attacks" },
+    { label: "2008 crash", year: 2008, detail: "2008 financial crisis / Great Recession onset (Grokipedia).", source: "https://grokipedia.com/page/Great_Recession" },
+    { label: "Covid", year: 2020, detail: "COVID-19 pandemic; SARS-CoV-2 emerged late 2019, global 2020 (Grokipedia).", source: "https://grokipedia.com/page/COVID-19_pandemic" }
   ];
+
 
   var yearTicks = [];
   for (var y = 1450; y <= 2100; y += 50) yearTicks.push(y);
@@ -824,11 +828,10 @@
       last[best] = ev.year;
     });
   }
-  assignLanes(events);
-
   var tooltip = document.getElementById("tooltip");
   var scroller = document.getElementById("scroller");
   var scrollHint = document.getElementById("scrollHint");
+  var timelineEl = document.getElementById("timeline");
 
   // Saecula
   var saecEl = document.getElementById("saecula");
@@ -864,20 +867,47 @@
 
   // Events
   var eventsEl = document.getElementById("events");
-  events.forEach(function (ev, i) {
-    var el = document.createElement("div");
-    el.className = "event lane-" + ev.lane;
-    el.style.left = pct(ev.year) + "%";
-    el.style.animationDelay = (0.9 + i * 0.03) + "s";
-    var yr = ev.end ? (ev.year + "–" + String(ev.end).slice(-2)) : String(ev.year);
-    if (ev.end && ev.end - ev.year > 10) yr = ev.year + "–" + ev.end;
-    el.innerHTML = '<div class="etick"></div><div class="elabel">' + esc(ev.label) +
-      '</div><div class="eyear">' + esc(yr) + "</div>";
-    el.dataset.tipTitle = ev.label;
-    el.dataset.tipBody = ev.detail;
-    eventsEl.appendChild(el);
-    setTimeout(function () { el.classList.add("enter"); }, 900 + i * 30);
-  });
+  function renderEvents(list, animate) {
+    assignLanes(list);
+    eventsEl.innerHTML = "";
+    list.forEach(function (ev, i) {
+      var el = document.createElement("div");
+      el.className = "event lane-" + ev.lane;
+      el.style.left = pct(ev.year) + "%";
+      if (animate !== false && !reducedMotion) el.style.animationDelay = (0.9 + i * 0.03) + "s";
+      var yr = ev.end ? (ev.year + "–" + String(ev.end).slice(-2)) : String(ev.year);
+      if (ev.end && ev.end - ev.year > 10) yr = ev.year + "–" + ev.end;
+      el.innerHTML = '<div class="etick"></div><div class="elabel">' + esc(ev.label) +
+        '</div><div class="eyear">' + esc(yr) + "</div>";
+      el.dataset.tipTitle = ev.label;
+      el.dataset.tipBody = ev.detail + (ev.source ? " · " + ev.source : "");
+      eventsEl.appendChild(el);
+      if (animate !== false && !reducedMotion) {
+        setTimeout(function () { el.classList.add("enter"); }, 900 + i * 30);
+      } else {
+        el.style.opacity = "1";
+        el.classList.add("enter");
+      }
+    });
+  }
+  renderEvents(events, true);
+
+  // Now marker on desktop timeline
+  var nowMarker = document.createElement("div");
+  nowMarker.className = "now-marker";
+  nowMarker.id = "nowMarker";
+  nowMarker.setAttribute("aria-hidden", "true");
+  nowMarker.innerHTML = '<div class="now-label">Now</div><div class="now-glow"></div>';
+  nowMarker.style.left = pct(nowYear) + "%";
+  timelineEl.appendChild(nowMarker);
+
+  function updateNowMarker() {
+    var d = new Date();
+    nowYear = d.getFullYear() + ((d.getMonth() * 30.437 + d.getDate()) / 365.25);
+    if (nowYear < YEAR_START) nowYear = YEAR_START;
+    if (nowYear > YEAR_END) nowYear = YEAR_END;
+    nowMarker.style.left = pct(nowYear) + "%";
+  }
 
   // Year ticks
   var ticksEl = document.getElementById("ticks");
@@ -990,15 +1020,62 @@
     if (e.key === "ArrowRight") { scroller.scrollLeft += 140; e.preventDefault(); }
     if (e.key === "ArrowLeft") { scroller.scrollLeft -= 140; e.preventDefault(); }
   });
-  // Start near present for first paint clarity, but hint says full span —
-  // Start at left (1435) for atlas feel.
+  function desktopScrollTarget() {
+    var tw = timelineEl.offsetWidth || 6200;
+    var target = (pct(nowYear) / 100) * tw - scroller.clientWidth * 0.55;
+    var max = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+    if (target < 0) target = 0;
+    if (target > max) target = max;
+    return target;
+  }
+
+  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+  function startTickAlong() {
+    if (reducedMotion) return;
+    nowMarker.classList.add("pulse");
+    // micro tick: refresh fractional position periodically so the marker feels alive
+    setInterval(updateNowMarker, 60 * 1000);
+  }
+
+  function animateDesktopToNow() {
+    var target = desktopScrollTarget();
+    scroller.scrollLeft = 0;
+    if (reducedMotion) {
+      scroller.scrollLeft = target;
+      scrollHint.classList.add("hidden");
+      return;
+    }
+    timelineEl.classList.add("zooming");
+    var origin = pct(nowYear) + "% 42%";
+    timelineEl.style.transformOrigin = origin;
+    timelineEl.style.transform = "scale(0.92)";
+    var start = 0;
+    var t0 = performance.now();
+    var dur = 2200;
+    function frame(now) {
+      var p = Math.min(1, (now - t0) / dur);
+      var e = easeOutCubic(p);
+      scroller.scrollLeft = start + (target - start) * e;
+      var sc = 0.92 + 0.08 * e;
+      timelineEl.style.transform = "scale(" + sc + ")";
+      if (p < 1) {
+        requestAnimationFrame(frame);
+      } else {
+        timelineEl.style.transform = "";
+        timelineEl.classList.remove("zooming");
+        scrollHint.classList.add("hidden");
+        startTickAlong();
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // Begin at left, then ease into today
   scroller.scrollLeft = 0;
+  requestAnimationFrame(function () { requestAnimationFrame(animateDesktopToNow); });
 
   // Mobile year-tape
-  var reducedMotion = false;
-  try {
-    reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  } catch (e) {}
 
   var PX = 16; // px per year
   var tapeScroll = document.getElementById("tapeScroll");
@@ -1236,12 +1313,28 @@
   function initTape() {
     if (!isMobileTape()) return;
     buildTape();
-    updateReadout(2026);
-    // wait for layout
+    var yTarget = _nowDate.getFullYear();
+    if (yTarget < YEAR_START) yTarget = YEAR_START;
+    if (yTarget > YEAR_END) yTarget = YEAR_END;
+    updateReadout(yTarget);
+    var cursor = document.querySelector(".tape-cursor");
     requestAnimationFrame(function () {
-      scrollToYear(2026, false);
-      lastYear = 2026;
-      updateReadout(2026);
+      if (reducedMotion) {
+        scrollToYear(yTarget, false);
+        lastYear = yTarget;
+        updateReadout(yTarget);
+        return;
+      }
+      // start earlier in the tape, then ease to today
+      scrollToYear(Math.max(YEAR_START, yTarget - 80), false);
+      requestAnimationFrame(function () {
+        scrollToYear(yTarget, true);
+        lastYear = yTarget;
+        updateReadout(yTarget);
+        setTimeout(function () {
+          if (cursor) cursor.classList.add("pulse");
+        }, 900);
+      });
     });
   }
 
@@ -1249,7 +1342,7 @@
     tapeScroll.addEventListener("scroll", onTapeScroll, { passive: true });
     window.addEventListener("resize", function () {
       if (!isMobileTape()) return;
-      var y = lastYear || 2026;
+      var y = lastYear || Math.round(nowYear);
       buildTape();
       scrollToYear(y, false);
       updateReadout(y);
@@ -1263,8 +1356,80 @@
   }
 
 
+  function eventKey(ev) {
+    return String(ev.label || "").toLowerCase().replace(/\s+/g, " ").trim() + "|" + String(ev.year);
+  }
+
+  function mergeLiveEvents(extra) {
+    if (!extra || !extra.length) return 0;
+    var seen = {};
+    events.forEach(function (ev) { seen[eventKey(ev)] = true; });
+    var added = 0;
+    extra.forEach(function (raw) {
+      if (!raw || raw.year == null || !raw.label) return;
+      var year = Number(raw.year);
+      if (!isFinite(year)) return;
+      year = Math.round(year);
+      if (year < YEAR_START || year > Math.ceil(nowYear) + 1) return;
+      if (year > YEAR_END) return;
+      var ev = {
+        label: String(raw.label).slice(0, 40),
+        year: year,
+        detail: String(raw.detail || (raw.label + " (" + year + ", Grokipedia live).")),
+        source: raw.source || ("https://grokipedia.com/page/" + encodeURIComponent(raw.slug || raw.label))
+      };
+      if (raw.end != null && isFinite(Number(raw.end))) ev.end = Math.round(Number(raw.end));
+      var k = eventKey(ev);
+      if (seen[k]) return;
+      seen[k] = true;
+      events.push(ev);
+      added++;
+    });
+    if (added) {
+      events.sort(function (a, b) { return a.year - b.year; });
+      renderEvents(events, false);
+      if (isMobileTape() && tapeScroll) {
+        var y = lastYear || Math.round(nowYear);
+        buildTape();
+        scrollToYear(y, false);
+        updateReadout(y);
+      }
+    }
+    return added;
+  }
+
+  function fetchLiveEvents() {
+    var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+    var timer = setTimeout(function () { try { if (ctrl) ctrl.abort(); } catch (e) {} }, 3000);
+    var opts = { headers: { "Accept": "application/json" } };
+    if (ctrl) opts.signal = ctrl.signal;
+    return fetch("/.netlify/functions/events?since=" + encodeURIComponent(String(Math.floor(nowYear))), opts)
+      .then(function (r) {
+        if (!r.ok) throw new Error("live " + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        clearTimeout(timer);
+        var list = (data && (data.events || data)) || [];
+        if (!Array.isArray(list)) list = [];
+        mergeLiveEvents(list);
+        return list;
+      })
+      .catch(function () {
+        clearTimeout(timer);
+        // silent fallback to baked-in baseline
+        return null;
+      });
+  }
+
+  fetchLiveEvents();
+
   // Expose for overlap test harness
-  window.__FT = { YEAR_START: YEAR_START, YEAR_END: YEAR_END, events: events, generations: generations, scrollToYear: scrollToYear, yearFromScroll: yearFromScroll, updateReadout: updateReadout };
+  window.__FT = {
+    YEAR_START: YEAR_START, YEAR_END: YEAR_END, events: events, generations: generations,
+    scrollToYear: scrollToYear, yearFromScroll: yearFromScroll, updateReadout: updateReadout,
+    nowYear: nowYear, mergeLiveEvents: mergeLiveEvents, fetchLiveEvents: fetchLiveEvents
+  };
 })();
 </script>
 </body>
